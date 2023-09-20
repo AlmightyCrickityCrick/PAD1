@@ -15,13 +15,13 @@ The application will have the following architecture, with the service boundarie
 
 Gateway - Route the client requests to the proper service swarm;
 Load Balancer - Select a service to handle the incoming request from the assigned swarm;
-Discovery Service - Keep registry of the existing service addresses and periodically check their health;
+Service Discovery - Keep registry of the existing service addresses and periodically check their health. If the health is not satisfactory, notifies the other services not to route through them and logs the defect;
 User Service - Handle HTTP requests related to user login/register/state modification;
 Game Service - Handle requests related to game process and lobbies;
 Cache - Will temporarily store the information about the ongoing game processes.
 
 ## Technology Stack and Communication Patterns
-The User Service and Game Service will be written in Elixir, while the Gateway, Discovery Service and Load Balancer will be written in Kotlin, using the Ktor library. The User Service will receive RESTful requests from users, while the Game Service will also make use of Websockets or TCP sockets for the game within the lobby. Communication between the Discovery Service and the rest of the components will be through HTTP with RPC type requests.
+The User Service and Game Service will be written in Elixir, while the Gateway, Service Discovery and Load Balancer will be written in Kotlin, using the Ktor library. The User Service will receive RESTful requests from users, while the Game Service will also make use of Websockets or TCP sockets for the game within the lobby. Communication between the Service Discovery and the rest of the components will be through HTTP with RPC type requests.
 
 ## Data Management
 The User Service and Game Service will each have their own database, with the Game Service also employing the Redis API for storing ongoing game information for a limited period of time. All messages passed will be in JSON format, with the following requests and responses expected for each Service and endpoint:
@@ -34,9 +34,21 @@ Method: POST
 Payload: {}
 Response: 200 OK
 {
-"database" : "none/ok/disconnected",
-"load":"ok/full"
+	"database" : "none",
+	"load":"ok"
 }
+
+Response: 503 Service Unavailable
+{
+	"database" : "ok",
+	"load": "full"
+}
+Response: 503 Service Unavailable
+{
+	"database": "disconnected",
+	"load":" ok"
+}
+
 ```
 ### Gateway:
 - Login
@@ -90,9 +102,14 @@ Payload: {
     "id" : 12345
     "rank" : "1"
 }
-Response: {
+Response: 200 OK
+{
     "lobby_link": "/lobby/id234",
     "exit_hash": "aghfvcxdjhkjbjeblxkdd"
+}
+Response: 403 
+{
+    "reason" : "user_ban"
 }
 ```
 
@@ -105,6 +122,56 @@ Payload: {
     "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 Response: 200 OK
+```
+- Get User Friends
+```
+Endpoint: /get/12345/friends
+Method: GET
+Response: {
+    friends:[
+        {
+            "id": 1671,
+            "username": "user2",
+            "rank" : 1,
+        }
+    ]
+}
+```
+
+- Add friend 
+```
+Endpoint: /befriend/5678
+Method: POST
+Payload: {
+    "id" : "12345,
+}
+Response: 201 OK
+```
+
+- Delete friend 
+```
+Endpoint: /unfriend/5678
+Method: POST
+Payload: {
+    "id" : "12345,
+}
+Response: 201 OK
+```
+
+- Create Friend Lobby
+```
+Endpoint: /privatejoin
+Method: POST
+Payload: {
+    "id" : 12345
+    "friendId" : [152636, 8494957, 12536]
+}
+Response: 200 OK
+{
+    "lobby_link": "/privatelobby/id234",
+    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
+}
+
 ```
 
 ### Load Balancer:
@@ -155,7 +222,7 @@ Payload: {
 }
 Response: 200 OK
 ```
-### Discovery Service:
+### Service Discovery:
 - Service Registration
 ```
 Endpoint: /register
@@ -211,12 +278,29 @@ Response: {
 }
 ```
 
+- Get User Friends
+```
+Endpoint: /get/12345/friends
+Method: GET
+Response: {
+    friends:[
+        {
+            "id": 1671,
+            "username": "user2",
+            "rank" : 1,
+        }
+    ]
+}
+```
+
+
 - Raise Rank User
 ```
 Endpoint: /raiseRank
 Method: POST
 Payload: {
     "id" : "12345",
+    "value": 1256
 }
 Response: 200 OK
 ```
@@ -226,6 +310,7 @@ Endpoint: /lowerRank
 Method: POST
 Payload: {
     "id" : "12345",
+    "value": 1256
 }
 Response: 200 OK
 ```
@@ -238,7 +323,25 @@ Payload: {
 }
 Response: 200 OK
 ```
+- Add friend 
+```
+Endpoint: /befriend/5678
+Method: POST
+Payload: {
+    "id" : "12345,
+}
+Response: 201 OK
+```
 
+- Delete friend 
+```
+Endpoint: /unfriend/5678
+Method: POST
+Payload: {
+    "id" : "12345,
+}
+Response: 201 OK
+```
 ### Game Service:
 - Join Lobby
 ```
@@ -248,10 +351,32 @@ Payload: {
     "id" : 12345
     "rank" : "1"
 }
-Response: {
+Response: 200 OK
+{
     "lobby_link": "/lobby/id234",
     "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
+
+Response: 403 
+{
+    "reason" : "user_ban"
+}
+```
+
+- Create Friend Lobby
+```
+Endpoint: /privatejoin
+Method: POST
+Payload: {
+    "id" : 12345
+    "friendId" : [152636, 8494957, 12536]
+}
+Response: 200 OK
+{
+    "lobby_link": "/privatelobby/id234",
+    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
+}
+
 ```
 
 - Lobby Endpoint (Direct longterm TCP based connection to the lobby)
@@ -269,6 +394,8 @@ Payload:
 Response:
 {
     "accepted": "true/false",
+	"hand_cards": ["blue_2"],
+	"current_card": "red_reverse",
     "next_user_id": 567
 }
 
@@ -283,7 +410,8 @@ Payload:
 Response:
 {
     "accepted": "true/false",
-    "cards": ["yellow_2", "red_plus2", "plus4", "color_change"],
+    "hand_cards": ["yellow_2", "red_plus2", "plus4", "color_change", "blue_2"],
+	"current_card": "blue",
     "next_user_id": 567
 }
 ```
@@ -298,6 +426,8 @@ Payload:
 Response:
 {
     "accepted": "true/false",
+	"hand_cards": ["blue_2"],
+	"current_card": "color_change",
     "next_user_id": 567
 }
 ```
@@ -334,7 +464,8 @@ Endpoint: /scaleup
 Method: POST
 Payload: {
 }
-Response: 200 OK/503 Service Unavailable
+Response: 200 OK
+Response: 503 Service Unavailable
 ```
 
 ## Deployment and Scaling
