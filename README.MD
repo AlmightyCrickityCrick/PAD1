@@ -63,7 +63,7 @@ Response: {
     "id": 12345,
     "username": "user1",
     "rank" : 1,
-    "isBanned": "false"
+    "is_banned": "false"
 }
 ```
 - Register
@@ -78,7 +78,7 @@ Response: {
     "id": 12345,
     "username": "user1",
     "rank" : 1,
-    "isBanned": "false"
+    "is_banned": "false"
 }
 ```
 
@@ -90,7 +90,7 @@ Response: {
     "id": 12345,
     "username": "user1",
     "rank" : 1,
-    "isBanned": "false"
+    "is_banned": "false"
 }
 ```
 
@@ -164,7 +164,7 @@ Endpoint: /privatejoin
 Method: POST
 Payload: {
     "id" : 12345
-    "friendId" : [152636, 8494957, 12536]
+    "friend_id" : [152636, 8494957, 12536]
 }
 Response: 200 OK
 {
@@ -247,7 +247,7 @@ Response: {
     "id": 12345,
     "username": "user1",
     "rank" : 1,
-    "isBanned": "false"
+    "is_banned": "false"
 }
 ```
 - Register
@@ -262,7 +262,7 @@ Response: {
     "id": 12345,
     "username": "user1",
     "rank" : 1,
-    "isBanned": "false"
+    "is_banned": "false"
 }
 ```
 
@@ -381,7 +381,7 @@ Response: 200 OK
 
 - Lobby Endpoint (Direct longterm TCP based connection to the lobby)
 ```
-Endpoint: /lobby/id234
+Endpoint: /lobby/id234?userid=2
 Accepted Payloads: 
 ```
 ```

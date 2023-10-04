@@ -1,0 +1,55 @@
+version: '3'
+services:
+  # ranking_service:
+  #   build: ./ranking_service
+  #   ports: 
+  #     - "8080:8080"
+  #   depends_on:
+  #     - ranking_service_database
+  #   environment:
+  #     POSTGRES_HOST: ranking_service_repo
+  
+  game_service:
+    build: ./game_service
+    ports:
+      - "7070:7070"
+    depends_on:
+      - game_history_database
+      - redis_game_cache
+    environment:
+      POSTGRES_HOST: game_history_database
+
+  ranking_service_database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: ranking_service_repo
+    volumes:
+      - postgres_ranking_data:/var/lib/postgresql/data
+    ports:
+      - "5432"
+
+  redis_game_cache:
+    image: redis:alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes: 
+      - redis_game_cache:/data
+
+  game_history_database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: game_history_repo
+    volumes:
+      - postgres_game_data:/var/lib/postgresql/data
+    ports:
+      - "5432"
+
+volumes:
+  postgres_ranking_data:
+  postgres_game_data:
+  redis_game_cache:
