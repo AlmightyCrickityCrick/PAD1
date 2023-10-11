@@ -3,21 +3,33 @@ services:
   # ranking_service:
   #   build: ./ranking_service
   #   ports: 
-  #     - "8080:8080"
+  #     - "8080"
   #   depends_on:
   #     - ranking_service_database
   #   environment:
   #     POSTGRES_HOST: ranking_service_repo
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 3
+    #   endpoint_mode: dnsrr
+    # volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
   
   game_service:
     build: ./game_service
     ports:
-      - "7070:7070"
+      - "7070"
     depends_on:
       - game_history_database
       - redis_game_cache
     environment:
       POSTGRES_HOST: game_history_database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
 
   ranking_service_database:
     image: postgres:latest
@@ -34,7 +46,7 @@ services:
     image: redis:alpine
     restart: always
     ports:
-      - '6379:6379'
+      - '6379'
     volumes: 
       - redis_game_cache:/data
 

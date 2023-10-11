@@ -469,8 +469,8 @@ Response: 503 Service Unavailable
 ```
 
 ## Deployment and Scaling
-The services are expected to be deployed using Docker, with horizontal scaling being accounted for the User System and Game System.
-
+The services are expected to be deployed using Docker, with horizontal scaling being accounted for the User System and Game System. As the services are expected to be replicas, no Host port can be set within the Docker Compose file (Thanks v2), so the services are running requests to the Daemon to find their own ports. Please make sure in the docker settings that the tcp:2375 port is exposed to non tlc protected connections.
+(Not good, but it is what it is)
 ## Bibliography
 
 [1] [Peer to Peer vs Server Hosted Games](https://www.servers.com/news/blog/differences-between-peer-to-peer-and-dedicated-game-server-hosting) 

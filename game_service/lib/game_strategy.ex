@@ -29,31 +29,4 @@ defmodule GameStrategy do
    IO.inspect(result)
   end
 
-  def createLobby(user_id) do
-
-    #TODO: Search for any non fully occupied lobbies first
-
-    lobby_nr = Enum.random(10000000 .. 99999999)
-    DynamicSupervisor.start_child(GameLobbySupervisor,
-    {GameMaster, %{:name => "lobby#{lobby_nr}", :players => [user_id], :type => :public}})
-
-    %{lobby: "/lobby/#{lobby_nr}"}
-  end
-
-  def createPrivateLobby(user_id, friends_id) do
-    lobby_nr = Enum.random(10000000 .. 99999999)
-    DynamicSupervisor.start_child(GameLobbySupervisor,
-    {GameMaster, %{:name => "lobby#{lobby_nr}", :players => [user_id | friends_id], :type => :private}})
-    %{lobby: "/lobby/#{lobby_nr}"}
-  end
-
 end
-
-
-
-
-  #    :ets.insert(:spotify, {:code, code})
-#    {_, code} = List.first(:ets.lookup(:spotify, :code))
-    # :ets.lookup_element()
-    # :ets.lookup(:lobby_registry)
-    # :ets.update_element()

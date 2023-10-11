@@ -2,35 +2,43 @@ defmodule GameMaster do
   use GenServer
 
   def start_link(args) do
+    IO.puts("Starting server #{Map.get(args, :name)}")
     GenServer.start_link(__MODULE__, args, name: Map.get(args, :name))
   end
 
   def init(init_arg) do
     players = Map.get(init_arg, :players)
-
     table_deck = get_full_deck()
-
-    #TODO: Figure out how to take card from inside deck when head fresher
-
-    # deck1 = Enum.take_random(table_deck, 7)
-    # to_be_deleted = for card <- deck1 do
-    #   Enum.find_index(table_index, )
-    # end
-
-
-    #Creates the decks
-    decks = for p <- players do
-      %{p => Enum.take_random(table_deck, 7)}
-    end
-
-    {:ok, %{type: Map.get(init_arg, :type), players: players, current_player: List.first(players),  decks: decks, table_deck: table_deck, current_card: nil, orientation: :end }}
+    {:ok, %{type: Map.get(init_arg, :type), players: players, current_player: List.first(players),  decks: Map.new(), table_deck: table_deck, current_card: nil, orientation: :end }}
 
   end
 
-  #TODO: Handle users joining depending on lobby type
-  def handle_call({:join, id}, _from, state) do
+  def handle_cast({:add_player, user_id}, state) do
+    new_state = state |> Map.put(:players, [user_id | Map.get(state, :players)])
+    IO.inspect(new_state)
+    {:noreply, new_state}
+  end
 
-    {:reply, "", state}
+  def handle_call({:join, user_id}, _from, state) do
+    if user_id in Map.get(state, :players) do
+      {user_deck, table_deck} = create_user_deck(Map.get(state, :table_deck))
+      new_decks = Map.get(state, :decks) |> Map.put(user_id, user_deck)
+      new_state = state |> Map.put(:decks, new_decks) |> Map.put(:table_deck, table_deck)
+
+      #TODO: Format the message send to user upon connection (his deck)
+      {:reply, %{status: :success, message: %{accepted: true, hand_cards: user_deck, next_user_id: state.current_player, current_card: state.current_card}}, new_state}
+    else
+      {:reply, %{status: :error, message: "You do not have access to this lobby. Please leave"}, state}
+    end
+  end
+
+  def create_user_deck(table_deck) do
+    user_deck = Enum.take_random(table_deck, 7)
+    previous_deck = table_deck
+    new_deck = Enum.reduce(user_deck, previous_deck, fn x, acc ->
+      List.delete(acc, x)
+    end  )
+    {user_deck, new_deck}
   end
 
   def handle_call({:move, move}, _from, state) do

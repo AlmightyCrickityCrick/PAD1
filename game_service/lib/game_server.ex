@@ -10,6 +10,10 @@ defmodule GameServer do
     send_resp(conn, 200, "Authorised Personnel only")
   end
 
+  get "/ping" do
+    send_resp(conn, 200, "pong")
+  end
+
   get "/getHealth" do
     send_resp(conn, 200, "")
   end
@@ -30,18 +34,24 @@ defmodule GameServer do
 
   post "/join" do
     body = conn.body_params
-    game = GameStrategy.createLobby(Map.get(body, "id"))
-
-    encoded_game = Poison.encode!(game)
-    send_resp(conn, 200, encoded_game)
+    {result, game}= GenServer.call(GameMasterDirector, {:join, Map.get(body, "id")})
+    if result != :ok do
+      send_resp(conn, 408, "Connection full")
+    else
+      encoded_game = Poison.encode!(game)
+      send_resp(conn, 200, encoded_game)
+    end
   end
 
   post "/privatejoin" do
     body = conn.body_params
-    game = GameStrategy.createPrivateLobby(Map.get(body, "id"), Map.get(body, "friend_id"))
-
-    encoded_game = Poison.encode!(game)
-    send_resp(conn, 200, encoded_game)
+    {result, game} = GenServer.call(GameMasterDirector, {:joinprivate, Map.get(body, "id"), Map.get(body, "friend_id")})
+    if result != :ok do
+      send_resp(conn, 408, "Connection full")
+    else
+      encoded_game = Poison.encode!(game)
+      send_resp(conn, 200, encoded_game)
+    end
   end
 
   match _ do

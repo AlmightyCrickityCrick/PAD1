@@ -3,7 +3,7 @@ defmodule GameWebsocketServer do
 
   def init(request, _state) do
     user_id = String.replace(request.qs, "userid=", "")
-    state = %{registry_key: request.path, user_id: String.to_integer(user_id)}
+    state = %{registry_key: request.path, lobby_nr: String.replace(request.path,  "/lobby/", ""), user_id: String.to_integer(user_id)}
     IO.inspect(state)
 
     {:cowboy_websocket, request, state}
@@ -11,9 +11,8 @@ defmodule GameWebsocketServer do
 
   def websocket_init(state) do
     GameRegistry |> Registry.register(state.registry_key, state.user_id)
-    lobby_nr = String.replace(state.registry_key, "/lobby/", "")
-    # responses = GenServer.call("lobby#{lobby_nr}", {:join, state.user_id})
-
+    responses = GenServer.call(String.to_atom("lobby#{state.lobby_nr}"), {:join, state.user_id})
+    Process.send(self(), Poison.encode!(responses), [])
     {:ok, state}
   end
 
