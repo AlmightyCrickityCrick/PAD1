@@ -10,9 +10,9 @@ defmodule RankingServer do
     send_resp(conn, 200, "Authorised Personnel only")
   end
 
-  get "/getHealth" do
-
-    send_resp(conn, 200, "")
+  post "/getHealth" do
+    
+      send_resp(conn, 200, Poison.encode!(%{database: :ok, load: :ok}))
   end
 
 

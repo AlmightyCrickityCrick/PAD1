@@ -1,5 +1,12 @@
 version: '3'
 services:
+  service_discovery:
+    build: ./ServiceDiscovery/service-discovery
+    ports:
+      - "8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   # ranking_service:
   #   build: ./ranking_service
   #   ports: 
@@ -22,6 +29,7 @@ services:
     depends_on:
       - game_history_database
       - redis_game_cache
+      - service_discovery
     environment:
       POSTGRES_HOST: game_history_database
     volumes:

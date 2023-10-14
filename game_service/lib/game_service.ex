@@ -8,6 +8,7 @@ defmodule GameService do
 
     {container_id, host_port} = figure_out_self()
     IO.puts("Hi i am #{container_id} listening to #{host_port}")
+    register(container_id, host_port)
     children = [
       {Plug.Cowboy, scheme: :http, plug:  GameServer, options: [port: 7070, dispatch: dispatch()] },
       GameHistory.Repo,
@@ -30,6 +31,11 @@ defp figure_out_self do
     result = Poison.decode!(result)
     port = result |> Map.get("NetworkSettings") |> Map.get("Ports") |> Map.get("7070/tcp")|> List.first() |> Map.get("HostPort")
     {Map.get(result, "Id"), port}
+end
+
+defp register(host_id, port) do
+  result = HTTPoison.post("http://service_discovery:8080/register", Poison.encode!(%{type: :game_service, external_port: port, internal_port: 7070}))
+  IO.inspect(result)
 end
 
 

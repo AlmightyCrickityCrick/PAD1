@@ -9,7 +9,6 @@ defmodule GameMasterDirector do
     {:ok, init_arg}
   end
 
-  #TODO: Handle users joining depending on lobby type
   def handle_call({:join, id}, _from, state) do
     reply = createLobby(id)
     if reply != nil do
@@ -74,7 +73,8 @@ defmodule GameMasterDirector do
           GameLobbySupervisor,
           Supervisor.child_spec(
             {GameMaster, %{:name => String.to_atom("lobby#{lobby_nr}"), :players => [user_id], :type => :public}},
-            id: String.to_atom("lobby#{lobby_nr}")
+            id: String.to_atom("lobby#{lobby_nr}"),
+            restart: :temporary
             )
           )
         %{lobby: "/lobby/#{lobby_nr}"}
@@ -88,10 +88,15 @@ defmodule GameMasterDirector do
     DynamicSupervisor.start_child(GameLobbySupervisor,
     Supervisor.child_spec(
             {GameMaster, %{:name => String.to_atom("lobby#{lobby_nr}"), :players => [user_id | friends_id], :type => :private}},
-            id: String.to_atom("lobby#{lobby_nr}")
+            id: String.to_atom("lobby#{lobby_nr}"),
+            restart: :temporary
             )
     )
     %{lobby: "/lobby/#{lobby_nr}"}
+  end
+
+  def get_lobby_nr() do
+    DynamicSupervisor.count_children(GameLobbySupervisor) |> Map.get(:active)
   end
 
 end

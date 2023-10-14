@@ -14,10 +14,24 @@ defmodule GameMasterDirectorTest do
     assert  result == :ok
   end
 
+  test "get_lobby_count" do
+    IO.puts("Test for getting Lobby count")
+    result = GameMasterDirector.get_lobby_nr()
+    IO.puts("Lobbies == #{result}")
+    assert result == 1
+  end
+
   test "create_private_lobby" do
     IO.puts("Create private lobby running")
     {result, game} = GenServer.call(GameMasterDirector, {:joinprivate, 1, [2, 3, 4]})
     assert  result == :ok
+  end
+
+  test "get_lobby_count2" do
+    IO.puts("Test for getting Lobby count2")
+    result = GameMasterDirector.get_lobby_nr()
+    IO.puts("Lobbies == #{result}")
+    assert result == 2
   end
 
   test "lobby_full_check" do

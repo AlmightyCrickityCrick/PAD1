@@ -13,7 +13,11 @@ defmodule GameWebsocketServer do
     GameRegistry |> Registry.register(state.registry_key, state.user_id)
     responses = GenServer.call(String.to_atom("lobby#{state.lobby_nr}"), {:join, state.user_id})
     Process.send(self(), Poison.encode!(responses), [])
-    {:ok, state}
+    if Map.get(responses, :status) == :success do
+      {:ok, state}
+    else
+      {:close, state}
+    end
   end
 
   def websocket_handle({:text, json}, state) do
@@ -21,7 +25,6 @@ defmodule GameWebsocketServer do
     message = json
     IO.inspect(json)
     IO.inspect(state)
-    lobby_nr = String.replace(state.registry_key, "/lobby/", "")
     # responses = GenServer.call("lobby#{lobby_nr}", {:move, message})
 
     GameRegistry
