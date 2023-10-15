@@ -89,7 +89,7 @@ class HealthMonitor : Thread() {
     }
 
     private suspend fun deleteServiceFromGateway(service: RegisterModel){
-        val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+        val channel = ManagedChannelBuilder.forAddress(gateway.address, 7070).usePlaintext().build()
         val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
         val data =  serviceInstance {
             type = service.type.name
@@ -101,7 +101,7 @@ class HealthMonitor : Thread() {
         print("Success is ${result.success}")
     }
     private suspend fun notifyGatewayHealth(sAddress: String, sLoad: Int){
-        val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+        val channel = ManagedChannelBuilder.forAddress(gateway.address, 7070).usePlaintext().build()
         val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
         val data =  healthUpdate {
             address = sAddress
@@ -130,7 +130,7 @@ class HealthMonitor : Thread() {
 }
 
 suspend fun addServiceToGateway(service: RegisterModel){
-    val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+    val channel = ManagedChannelBuilder.forAddress(gateway.address, 7070).usePlaintext().build()
     val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
     val data =  serviceInstance {
         type = service.type.name

@@ -16,7 +16,7 @@ defmodule RankingService do
   end
 
   defp register(host_id, port) do
-    result = HTTPoison.post("http://service_discovery:8080/register", Poison.encode!(%{type: :ranking_service, external_port: port, internal_port: 8080}))
+    result = HTTPoison.post("http://service_discovery:8080/register", Poison.encode!(%{type: :ranking_service, internal_port: 8080}))
     IO.inspect(result)
   end
 

@@ -6,6 +6,17 @@ services:
       - "8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  
+  gateway:
+    build: ./Gateway/gateway
+    ports:
+      - "8080:8080"
+      - "7070"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - service_discovery
+
 
   # ranking_service:
   #   build: ./ranking_service
@@ -13,6 +24,8 @@ services:
   #     - "8080"
   #   depends_on:
   #     - ranking_service_database
+ #      - service_discovery
+#       - gateway
   #   environment:
   #     POSTGRES_HOST: ranking_service_repo
   #   deploy:
@@ -30,6 +43,7 @@ services:
       - game_history_database
       - redis_game_cache
       - service_discovery
+      - gateway
     environment:
       POSTGRES_HOST: game_history_database
     volumes:

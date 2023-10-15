@@ -1,0 +1,22 @@
+syntax="proto3";
+
+message HealthUpdate{
+  string address = 1;
+  int32 load = 2;
+}
+message ServiceInstance{
+  string type = 1;
+  string address = 2;
+  int32 internal_port = 3;
+  int32 external_port = 4;
+}
+
+message registrationResult{
+  int32 success = 1;
+}
+
+service ServiceRegistration{
+  rpc addService(ServiceInstance) returns(registrationResult);
+  rpc updateService(HealthUpdate) returns(registrationResult);
+  rpc removeService(ServiceInstance) returns(registrationResult);
+}
