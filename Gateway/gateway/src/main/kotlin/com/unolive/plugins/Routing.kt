@@ -120,16 +120,34 @@ fun Application.configureGamingToRankingRouting(){
 fun Application.configureGamingRouting(){
     routing{
 
-        get("/getGames/:userid"){
-
+        get("/getGames/{user_id}"){
+            val cr = currentGameService
+            var resp: HttpResponse = gameClient.get("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/getGames/${call.parameters["user_id"]}"){
+                accept(ContentType.Application.Json)
+            }
+            call.respond(resp.status, resp.body<String>())
         }
 
         post("/join"){
-
+            val cr = currentGameService
+            var resp: HttpResponse = gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/join"){
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(call.receive<String>())
+            }
+            val r =  resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
+            call.respond(resp.status, r)
         }
 
-        post("/exit/:lobby_id"){
-
+        post("/privatejoin"){
+            val cr = currentGameService
+            var resp: HttpResponse = gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/privatejoin"){
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(call.receive<String>())
+            }
+            val r =  resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
+            call.respond(resp.status, r)
         }
 
 

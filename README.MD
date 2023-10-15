@@ -104,7 +104,7 @@ Payload: {
 }
 Response: 200 OK
 {
-    "lobby_link": "/lobby/id234",
+    "lobby_link": ":59999/lobby/id234",
 }
 Response: 403 
 {
@@ -112,15 +112,24 @@ Response: 403
 }
 ```
 
-- Exit Lobby
+- Get all the games played by a user
 ```
-Endpoint: /exit/lobbyid234
+Endpoint: /getGames/userid123/
 Method: POST
-Payload: {
-    "id" : "12345,
+Payload: 
+{
+    "userid" : "12345,
 }
-Response: 200 OK
+Response: 
+{
+    "lobby_number": 1234,
+    "time_started": "2023-09-18",
+    "time_ended": "2023-09-18",
+    "winner": 12345,
+    "players": [1234, 2617, 28394, 2637]
+}
 ```
+
 - Get User Friends
 ```
 Endpoint: /user/12345/friends
@@ -294,7 +303,7 @@ Payload: {
 }
 Response: 200 OK
 {
-    "lobby_link": "/lobby/id234",
+    "lobby_link": ":59999/lobby/id234",
 }
 
 Response: 403 
@@ -313,7 +322,7 @@ Payload: {
 }
 Response: 200 OK
 {
-    "lobby_link": "/privatelobby/id234",
+    "lobby_link": ":59999/privatelobby/id234",
 }
 
 ```

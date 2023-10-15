@@ -43,6 +43,7 @@ var currentRankingService = AtomicInteger(0)
 
 var gamingServices = ConcurrentHashMap<String, Int>()
 var gamingServiceInfo = ConcurrentHashMap<String, RegisterModel>()
+var currentGameService = ""
 fun main() {
     val server = ServerBuilder
         .forPort(7070)

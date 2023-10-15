@@ -15,6 +15,7 @@ class ServiceRegistrationServer : ServiceRegistrationGrpcKt.ServiceRegistrationC
                 request.internalPort,
                 request.externalPort)
             gamingServices[request.address] = 0
+            if (currentGameService == "") currentGameService = request.address
         } else{
             rankingServices.add(RegisterModel(
                 ServiceType.game_service,
@@ -29,9 +30,12 @@ class ServiceRegistrationServer : ServiceRegistrationGrpcKt.ServiceRegistrationC
         println("Received update Request  ${request.address} ${request.load}")
         println("-----------------------------------------------------------")
         gamingServices[request.address] = request.load
+        if (request.load < gamingServices[currentGameService]!!)
+            currentGameService = request.address
         return registrationResult{ success = 1}
     }
 
+    //TODO: Handle removeService and requests when all services are full
     override suspend fun removeService(request: ServiceQueue.ServiceInstance): ServiceQueue.registrationResult {
         println("-----------------------------------------------------------")
         println("Received remove Request ${request.type} ${request.address} ${request.externalPort}")
