@@ -17,9 +17,9 @@ defmodule GameServer do
   post "/getHealth" do
     nr_of_lobbies = GameMasterDirector.get_lobby_nr()
     if (nr_of_lobbies > 4) do
-      send_resp(conn, 503, Poison.encode!(%{database: :ok, load: :full}))
+      send_resp(conn, 503, Poison.encode!(%{database: :ok, load: :full, lobbies: nr_of_lobbies}))
     else
-      send_resp(conn, 200, Poison.encode!(%{database: :ok, load: :ok}))
+      send_resp(conn, 200, Poison.encode!(%{database: :ok, load: :ok, lobbies: nr_of_lobbies}))
     end
   end
 

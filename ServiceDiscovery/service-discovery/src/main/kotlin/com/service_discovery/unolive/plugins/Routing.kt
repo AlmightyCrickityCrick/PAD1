@@ -1,6 +1,7 @@
 package com.service_discovery.unolive.plugins
 
 import RegisterModel
+import com.service_discovery.unolive.addServiceToGateway
 import com.service_discovery.unolive.gateway
 import com.service_discovery.unolive.models.DatabaseState
 import com.service_discovery.unolive.models.HealthModel
@@ -34,10 +35,11 @@ fun Application.configureRouting() {
                 println("New Service Registered ${service.type} ${service.address} ${service.internal_port}")
                 registeredServices.add(service)
                 if (service.type == ServiceType.gateway_service) gateway = service
+                else {
+                    addServiceToGateway(service)
+                }
                 call.respond(HttpStatusCode.Created)
 
-//            if(service.type != ServiceType.gateway_service)
-                //TODO:Send via gRPC the service info
             } catch (err : Error) {
                 println(err)
                 println("Incorrect register content")

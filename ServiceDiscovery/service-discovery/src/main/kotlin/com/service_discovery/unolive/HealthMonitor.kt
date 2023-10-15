@@ -4,6 +4,7 @@ import RegisterModel
 import com.service_discovery.unolive.models.DatabaseState
 import com.service_discovery.unolive.models.HealthModel
 import com.service_discovery.unolive.models.LoadState
+import healthUpdate
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -14,6 +15,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.util.concurrent.CyclicBarrier
 import kotlin.concurrent.thread
+import io.grpc.ManagedChannelBuilder
+import serviceInstance
 
 class HealthMonitor : Thread() {
     lateinit var bar: CyclicBarrier
@@ -61,26 +64,80 @@ class HealthMonitor : Thread() {
     private fun analyzeHealth(service: RegisterModel, healthReport: HealthModel){
         if (healthReport.load == LoadState.full){
             if (service !in busyServices) busyServices.add(service)
-            //TODO: Send to gateway to stop sending to service
+            runBlocking {
+                launch{
+                    deleteServiceFromGateway(service)
+                }
+            }
         } else if (healthReport.load == LoadState.ok && service in busyServices ){
             busyServices.remove(service)
-            //TODO: Send to Gateway to reinstate the service
+            runBlocking {
+                launch{
+                    addServiceToGateway(service)
+                }
+            }
+        } else if (healthReport.lobbies != null){
+            runBlocking {
+                launch{
+                    notifyGatewayHealth(service.address!!, healthReport.lobbies)
+                }
+            }
         }
         if (healthReport.database == DatabaseState.disconnected){
             println("Service ${service.type} at address ${service.address} is disconnected from database!! Check the connection!")
         }
     }
 
+    private suspend fun deleteServiceFromGateway(service: RegisterModel){
+        val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+        val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
+        val data =  serviceInstance {
+            type = service.type.name
+            address = service.address!!
+            internalPort = service.internal_port!!
+            externalPort = service.external_port?:-1
+        }
+        val result = stub.removeService(data)
+        print("Success is ${result.success}")
+    }
+    private suspend fun notifyGatewayHealth(sAddress: String, sLoad: Int){
+        val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+        val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
+        val data =  healthUpdate {
+            address = sAddress
+            load = sLoad
+        }
+        val result = stub.updateService(data)
+        print("Success is ${result.success}")
+    }
+
     private fun handleCircuitBreak(service: RegisterModel){
         println("Service ${service.type} at address ${service.address} is unresponsive. Initiating break")
         if (service.type != gateway.type){
-            //TODO: Send message by gRPC to erase service from gateway
+            runBlocking {
+                launch{
+                    deleteServiceFromGateway(service)
+                }
+            }
         }
         registeredServices.remove(service)
         restartService()
     }
 
     private fun restartService(){
-
+        //TODO: Add call to API to restart the service
     }
+}
+
+suspend fun addServiceToGateway(service: RegisterModel){
+    val channel = ManagedChannelBuilder.forAddress(gateway.address, gateway.internal_port!!).usePlaintext().build()
+    val stub = ServiceRegistrationGrpcKt.ServiceRegistrationCoroutineStub(channel)
+    val data =  serviceInstance {
+        type = service.type.name
+        address = service.address!!
+        internalPort = service.internal_port!!
+        externalPort = service.external_port?:-1
+    }
+    val result = stub.addService(data)
+    print("Success is ${result.success}")
 }

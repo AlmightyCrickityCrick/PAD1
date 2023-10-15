@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class HealthModel(val database: DatabaseState, val load: LoadState)
+data class HealthModel(val database: DatabaseState, val load: LoadState, val lobbies: Int?=null)
 
 @Serializable
 enum class DatabaseState{
