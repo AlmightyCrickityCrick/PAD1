@@ -47,6 +47,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("io.ktor:ktor-server-rate-limit:$ktor_version")
 
     implementation("com.google.protobuf:protobuf-kotlin:3.19.4")
     api("io.grpc:grpc-protobuf:1.44.0")

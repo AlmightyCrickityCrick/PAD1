@@ -15,6 +15,8 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 var taskTimeoutLimitSeconds: Long = 10
 
@@ -23,6 +25,24 @@ var client = HttpClient() {
         requestTimeoutMillis = taskTimeoutLimitSeconds * 1000
     }
 }
+
+var rankingClient = HttpClient() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = taskTimeoutLimitSeconds * 1000
+    }
+}
+
+var gameClient = HttpClient() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = taskTimeoutLimitSeconds * 1000
+    }
+}
+
+var rankingServices = ArrayList<RegisterModel>()
+var currentRankingService = AtomicInteger(0)
+
+var gamingServices = ConcurrentHashMap<String, Int>()
+var gamingServiceInfo = ConcurrentHashMap<String, RegisterModel>()
 fun main() {
     val server = ServerBuilder
         .forPort(7070)
@@ -40,6 +60,9 @@ fun main() {
 fun Application.module() {
     configureHTTP()
     configureRouting()
+    configureRankingRouting()
+    configureGamingRouting()
+    configureGamingToRankingRouting()
 }
 
 fun registerSelf(){

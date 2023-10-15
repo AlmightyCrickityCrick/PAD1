@@ -17,23 +17,22 @@ services:
     depends_on:
       - service_discovery
 
-
-  # ranking_service:
-  #   build: ./ranking_service
-  #   ports: 
-  #     - "8080"
-  #   depends_on:
-  #     - ranking_service_database
- #      - service_discovery
-#       - gateway
-  #   environment:
-  #     POSTGRES_HOST: ranking_service_repo
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 3
-    #   endpoint_mode: dnsrr
-    # volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock
+  ranking_service:
+    build: ./ranking_service
+    ports: 
+      - "8080"
+    depends_on:
+      - ranking_service_database
+      - service_discovery
+      - gateway
+    environment:
+      POSTGRES_HOST: ranking_service_repo
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   
   game_service:
     build: ./game_service

@@ -41,7 +41,8 @@ Response: 200 OK
 Response: 503 Service Unavailable
 {
 	"database" : "ok",
-	"load": "full"
+	"load": "full",
+    "lobbies": 3
 }
 Response: 503 Service Unavailable
 {
@@ -84,7 +85,7 @@ Response: {
 
 - Get User
 ```
-Endpoint: /get/12345
+Endpoint: /user/12345
 Method: GET
 Response: {
     "id": 12345,
@@ -100,12 +101,10 @@ Endpoint: /join
 Method: POST
 Payload: {
     "id" : 12345
-    "rank" : "1"
 }
 Response: 200 OK
 {
     "lobby_link": "/lobby/id234",
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 Response: 403 
 {
@@ -115,17 +114,16 @@ Response: 403
 
 - Exit Lobby
 ```
-Endpoint: /lobby/exit/id234/
+Endpoint: /exit/lobbyid234
 Method: POST
 Payload: {
     "id" : "12345,
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 Response: 200 OK
 ```
 - Get User Friends
 ```
-Endpoint: /get/12345/friends
+Endpoint: /user/12345/friends
 Method: GET
 Response: {
     friends:[
@@ -169,59 +167,10 @@ Payload: {
 Response: 200 OK
 {
     "lobby_link": "/privatelobby/id234",
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 
 ```
 
-### Load Balancer:
-- Add Service to Load Balancer
-```
-Endpoint: /addService
-Method: POST
-Payload: {
-    "address" : "game-service-3"
-}
-Response: 201 Created
-```
-- Remove Service from Load Balancer
-```
-Endpoint: /deleteService
-Method: POST
-Payload: {
-    "address" : "game-service-3"
-}
-Response: 200 OK
-```
-- Pass Message to Service
-```
-Endpoint: /pass
-Method: POST
-Payload: {
-    "endpoint" : "/login",
-    "message" : "{payload}"
-}
-Response: 200 OK
-```
-- Unqueue Service
-```
-Endpoint: /unqueue
-Method: POST
-Payload: {
-    "address" : "game-service-3",
-    "reason" : "full/shutdown"
-}
-Response: 200 OK
-```
-- Queue Service
-```
-Endpoint: /queue
-Method: POST
-Payload: {
-    "address" : "game-service-3",
-}
-Response: 200 OK
-```
 ### Service Discovery:
 - Service Registration
 ```
@@ -229,12 +178,14 @@ Endpoint: /register
 Method: POST
 Payload: {
     "type" : "game/user/lb/gate",
-    "address" : "game-service-3"
+    "address" : "game-service-3",
+    "internal_port": 7070,
+    "external_port": 59800
 }
 Response: 201 Created
 ```
 
-### User Service:
+### Ranking Service:
 - Login
 ```
 Endpoint: /login
@@ -268,7 +219,7 @@ Response: {
 
 - Get User
 ```
-Endpoint: /get/12345
+Endpoint: /user/12345
 Method: GET
 Response: {
     "id": 12345,
@@ -280,7 +231,7 @@ Response: {
 
 - Get User Friends
 ```
-Endpoint: /get/12345/friends
+Endpoint: /user/12345/friends
 Method: GET
 Response: {
     friends:[
@@ -294,26 +245,17 @@ Response: {
 ```
 
 
-- Raise Rank User
+- Change Rank of User
 ```
-Endpoint: /raiseRank
+Endpoint: /changeRank
 Method: POST
 Payload: {
     "id" : "12345",
-    "value": 1256
+    "value": -1256
 }
 Response: 200 OK
 ```
-- Lower Rank User
-```
-Endpoint: /lowerRank
-Method: POST
-Payload: {
-    "id" : "12345",
-    "value": 1256
-}
-Response: 200 OK
-```
+
 - Ban User
 ```
 Endpoint: /banUser
@@ -328,7 +270,7 @@ Response: 200 OK
 Endpoint: /befriend/5678
 Method: POST
 Payload: {
-    "id" : "12345,
+    "friend_id" : "12345,
 }
 Response: 201 OK
 ```
@@ -338,7 +280,7 @@ Response: 201 OK
 Endpoint: /unfriend/5678
 Method: POST
 Payload: {
-    "id" : "12345,
+    "friend_id" : "12345,
 }
 Response: 201 OK
 ```
@@ -349,12 +291,10 @@ Endpoint: /join
 Method: POST
 Payload: {
     "id" : 12345
-    "rank" : "1"
 }
 Response: 200 OK
 {
     "lobby_link": "/lobby/id234",
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 
 Response: 403 
@@ -374,12 +314,11 @@ Payload: {
 Response: 200 OK
 {
     "lobby_link": "/privatelobby/id234",
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
 }
 
 ```
 
-- Lobby Endpoint (Direct longterm TCP based connection to the lobby)
+- Lobby Endpoint (Direct longterm Websocket connection to the lobby)
 ```
 Endpoint: /lobby/id234?userid=2
 Accepted Payloads: 
@@ -449,14 +388,31 @@ Response:
 ```
 - Exit Lobby
 ```
-Endpoint: /lobby/exit/id234/
+Endpoint: /exit/lobbyid234/
 Method: POST
 Payload: {
-    "id" : "12345,
-    "exit_hash": "aghfvcxdjhkjbjeblxkdd"
+    "userid" : "12345,
 }
 Response: 200 OK
 ```
+- Get all the games played by a user
+```
+Endpoint: /getGames/userid123/
+Method: POST
+Payload: 
+{
+    "userid" : "12345,
+}
+Response: 
+{
+    "lobby_number": 1234,
+    "time_started": "2023-09-18",
+    "time_ended": "2023-09-18",
+    "winner": 12345,
+    "players": [1234, 2617, 28394, 2637]
+}
+```
+
 Optional:
 - Scale Up (Special endpoint sent by User Service when an uptick of users happens)
 ```
