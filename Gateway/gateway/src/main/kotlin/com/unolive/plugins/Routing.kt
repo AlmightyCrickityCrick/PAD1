@@ -46,67 +46,85 @@ fun Application.configureRankingRouting(){
     routing {
         rateLimit(RateLimitName("user_requests")) {
             post("/login") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                val b = call.receive<String>()
-                var resp: HttpResponse =
-                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/login") {
-                        contentType(ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(b)
-                    }
-                call.respond(resp.status, resp.body<String>())
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    val b = call.receive<String>()
+                    var resp: HttpResponse =
+                        rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/login") {
+                            contentType(ContentType.Application.Json)
+                            accept(ContentType.Application.Json)
+                            setBody(b)
+                        }
+                    call.respond(resp.status, resp.body<String>())
+                }
             }
 
             post("/register") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                val b = call.receive<String>()
-                var resp: HttpResponse =
-                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/register") {
-                        contentType(ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(b)
-                    }
-                call.respond(resp.status, resp.body<String>())
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    val b = call.receive<String>()
+                    var resp: HttpResponse =
+                        rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/register") {
+                            contentType(ContentType.Application.Json)
+                            accept(ContentType.Application.Json)
+                            setBody(b)
+                        }
+                    call.respond(resp.status, resp.body<String>())
+                }
             }
 
             get("/user/{id}") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                var resp: HttpResponse =
-                    rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}") {
-                        accept(ContentType.Application.Json)
-                    }
-                call.respond(resp.status, resp.body<String>())
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    var resp: HttpResponse =
+                        rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}") {
+                            accept(ContentType.Application.Json)
+                        }
+                    call.respond(resp.status, resp.body<String>())
+                }
             }
 
             get("/user/{id}/friends") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                var resp: HttpResponse =
-                    rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}/friends") {
-                        accept(ContentType.Application.Json)
-                    }
-                call.respond(resp.status, resp.body<String>())
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    var resp: HttpResponse =
+                        rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}/friends") {
+                            accept(ContentType.Application.Json)
+                        }
+                    call.respond(resp.status, resp.body<String>())
+                }
             }
 
             post("/befriend/{user_id}") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                var resp: HttpResponse =
-                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/befriend/${call.parameters["user_id"]}") {
-                        contentType(ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(call.receive<String>())
-                    }
-                call.respond(resp.status)
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    var resp: HttpResponse =
+                        rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/befriend/${call.parameters["user_id"]}") {
+                            contentType(ContentType.Application.Json)
+                            accept(ContentType.Application.Json)
+                            setBody(call.receive<String>())
+                        }
+                    call.respond(resp.status)
+                }
             }
 
             post("/unfriend/{user_id}") {
-                val cr = currentRankingService.getAndIncrement() % rankingServices.size
-                var resp: HttpResponse =
-                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/unfriend/${call.parameters["user_id"]}") {
-                        contentType(ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(call.receive<String>())
-                    }
-                call.respond(resp.status)
+                if(rankingServices.size == 0) call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+                else {
+                    val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                    var resp: HttpResponse =
+                        rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/unfriend/${call.parameters["user_id"]}") {
+                            contentType(ContentType.Application.Json)
+                            accept(ContentType.Application.Json)
+                            setBody(call.receive<String>())
+                        }
+                    call.respond(resp.status)
+                }
             }
         }
     }
@@ -142,33 +160,45 @@ fun Application.configureGamingRouting(){
     routing{
         rateLimit(RateLimitName("user_requests")) {
         get("/getGames/{user_id}"){
-            val cr = currentGameService
-            var resp: HttpResponse = gameClient.get("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/getGames/${call.parameters["user_id"]}"){
-                accept(ContentType.Application.Json)
+            if(currentGameService == "") call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+            else{
+                val cr = currentGameService
+                var resp: HttpResponse = gameClient.get("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/getGames/${call.parameters["user_id"]}"){
+                    accept(ContentType.Application.Json)
+                }
+                call.respond(resp.status, resp.body<String>())
             }
-            call.respond(resp.status, resp.body<String>())
+
         }
 
         post("/join"){
             val cr = currentGameService
-            var resp: HttpResponse = gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/join"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(call.receive<String>())
+            if(currentGameService == "") call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+            else {
+                var resp: HttpResponse =
+                    gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/join") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(call.receive<String>())
+                    }
+                val r = resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
+                call.respond(resp.status, r)
             }
-            val r =  resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
-            call.respond(resp.status, r)
         }
 
         post("/privatejoin"){
             val cr = currentGameService
-            var resp: HttpResponse = gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/privatejoin"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(call.receive<String>())
+            if(currentGameService == "") call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, service unavailable")
+            else {
+                var resp: HttpResponse =
+                    gameClient.post("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/privatejoin") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(call.receive<String>())
+                    }
+                val r = resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
+                call.respond(resp.status, r)
             }
-            val r =  resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
-            call.respond(resp.status, r)
         }
 
         }

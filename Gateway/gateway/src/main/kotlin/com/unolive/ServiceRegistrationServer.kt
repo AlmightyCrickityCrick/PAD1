@@ -30,7 +30,7 @@ class ServiceRegistrationServer : ServiceRegistrationGrpcKt.ServiceRegistrationC
         println("Received update Request  ${request.address} ${request.load}")
         println("-----------------------------------------------------------")
         gamingServices[request.address] = request.load
-        if (request.load < gamingServices[currentGameService]!!)
+        if (currentGameService == "" || request.load < gamingServices[currentGameService]!!)
             currentGameService = request.address
         return registrationResult{ success = 1}
     }
@@ -43,6 +43,7 @@ class ServiceRegistrationServer : ServiceRegistrationGrpcKt.ServiceRegistrationC
         if (request.type == "game_service"){
             gamingServices.remove(request.address)
             gamingServiceInfo.remove(request.address)
+            if (currentGameService == request.address) currentGameService = ""
         } else{
             for (i in rankingServices){
                 if (i.address == request.address) {
