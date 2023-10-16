@@ -27,7 +27,7 @@ fun Application.configureRouting() {
         json()
     }
     install(RateLimit) {
-        global {
+        register(RateLimitName("user_requests")) {
             rateLimiter(limit = 60, refillPeriod = 60.seconds)
         }
     }
@@ -44,62 +44,70 @@ fun Application.configureRouting() {
 
 fun Application.configureRankingRouting(){
     routing {
-        post("/login"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            val b = call.receive<String>()
-            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/login"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(b)
+        rateLimit(RateLimitName("user_requests")) {
+            post("/login") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                val b = call.receive<String>()
+                var resp: HttpResponse =
+                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/login") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(b)
+                    }
+                call.respond(resp.status, resp.body<String>())
             }
-            call.respond(resp.status, resp.body<String>())
-        }
 
-        post("/register"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            val b = call.receive<String>()
-            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/register"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(b)
+            post("/register") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                val b = call.receive<String>()
+                var resp: HttpResponse =
+                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/register") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(b)
+                    }
+                call.respond(resp.status, resp.body<String>())
             }
-            call.respond(resp.status, resp.body<String>())
-        }
 
-        get("/user/{id}"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            var resp: HttpResponse = rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}"){
-                accept(ContentType.Application.Json)
+            get("/user/{id}") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                var resp: HttpResponse =
+                    rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}") {
+                        accept(ContentType.Application.Json)
+                    }
+                call.respond(resp.status, resp.body<String>())
             }
-            call.respond(resp.status, resp.body<String>())
-        }
 
-        get("/user/{id}/friends"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            var resp: HttpResponse = rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}/friends"){
-                accept(ContentType.Application.Json)
+            get("/user/{id}/friends") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                var resp: HttpResponse =
+                    rankingClient.get("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/user/${call.parameters["id"]}/friends") {
+                        accept(ContentType.Application.Json)
+                    }
+                call.respond(resp.status, resp.body<String>())
             }
-            call.respond(resp.status, resp.body<String>())
-        }
 
-        post("/befriend/{user_id}"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/befriend/${call.parameters["user_id"]}"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(call.receive<String>())
+            post("/befriend/{user_id}") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                var resp: HttpResponse =
+                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/befriend/${call.parameters["user_id"]}") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(call.receive<String>())
+                    }
+                call.respond(resp.status)
             }
-            call.respond(resp.status)
-        }
 
-        post("/unfriend/{user_id}"){
-            val cr = currentRankingService.getAndIncrement() % rankingServices.size
-            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/unfriend/${call.parameters["user_id"]}"){
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(call.receive<String>())
+            post("/unfriend/{user_id}") {
+                val cr = currentRankingService.getAndIncrement() % rankingServices.size
+                var resp: HttpResponse =
+                    rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/unfriend/${call.parameters["user_id"]}") {
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Application.Json)
+                        setBody(call.receive<String>())
+                    }
+                call.respond(resp.status)
             }
-            call.respond(resp.status)
         }
     }
 
@@ -108,18 +116,31 @@ fun Application.configureRankingRouting(){
 fun Application.configureGamingToRankingRouting(){
     routing{
         post("/changeRank"){
+            val cr = currentRankingService.getAndIncrement() % rankingServices.size
+            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/changeRank"){
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(call.receive<String>())
+            }
+            call.respond(resp.status)
 
         }
 
         post("/banUser"){
-
+            val cr = currentRankingService.getAndIncrement() % rankingServices.size
+            var resp: HttpResponse = rankingClient.post("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/banUser"){
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(call.receive<String>())
+            }
+            call.respond(resp.status)
         }
     }
 }
 
 fun Application.configureGamingRouting(){
     routing{
-
+        rateLimit(RateLimitName("user_requests")) {
         get("/getGames/{user_id}"){
             val cr = currentGameService
             var resp: HttpResponse = gameClient.get("http://${gamingServiceInfo[cr]!!.address}:${gamingServiceInfo[cr]!!.internal_port}/getGames/${call.parameters["user_id"]}"){
@@ -148,6 +169,8 @@ fun Application.configureGamingRouting(){
             }
             val r =  resp.body<String>().replaceFirst("/", ":${gamingServiceInfo[cr]!!.external_port}/")
             call.respond(resp.status, r)
+        }
+
         }
 
 
