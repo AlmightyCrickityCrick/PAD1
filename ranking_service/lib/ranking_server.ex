@@ -79,13 +79,14 @@ defmodule RankingServer do
   end
 
   post "/changeRank" do
-
+    _result = RankingStrategy.change_rank(conn.body_params["id"], conn.body_params["value"])
+    send_resp(conn, 200, "")
   end
 
   post "/banUser" do
-
+    _result = RankingStrategy.ban_user(conn.body_params["id"])
+    send_resp(conn, 200, "")
   end
-
 
   match _ do
     Logger.info("not correct URL given?")

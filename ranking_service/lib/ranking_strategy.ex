@@ -30,6 +30,7 @@ defmodule RankingStrategy do
         password: Map.get(player, "password"),
         email: Map.get(player, "email"),
         })
+        IO.inspect(changeset)
       {_result, user} = Players.Repo.insert(changeset)
       addUserToCache(user)
       IO.inspect(user)
@@ -83,12 +84,20 @@ defmodule RankingStrategy do
 
   end
 
-  def change_rank(usr_id, value) do
-
+  def change_rank(user_id, value) do
+    user = get_user(user_id)
+    changeset = user |> Schemas.Player.changeset(%{rank: user.rank + value})
+    IO.inspect(changeset)
+    {_success, new_user} =  changeset|> Players.Repo.update()
+    addUserToCache(new_user)
+    :ok
   end
 
-  def ban_user(usr_id) do
-
+  def ban_user(user_id) do
+    user = get_user(user_id)
+    {_success, new_user} = user |> Schemas.Player.changeset(%{is_banned: true}) |> Players.Repo.update()
+    addUserToCache(new_user)
+    :ok
   end
 
 

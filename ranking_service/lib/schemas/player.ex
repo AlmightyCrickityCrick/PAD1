@@ -14,7 +14,7 @@ defmodule Schemas.Player do
 
   def changeset(player, params \\ %{}) do
     player |>
-    cast(params, [:username, :password, :email]) |>
+    cast(params, [:username, :password, :email, :rank, :is_banned]) |>
     validate_required([:username, :email, :password]) |>
     unique_constraint(:email) |>
     validate_format(:email, ~r/@/) |>
