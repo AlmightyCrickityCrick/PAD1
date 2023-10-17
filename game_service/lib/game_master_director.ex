@@ -6,7 +6,9 @@ defmodule GameMasterDirector do
   end
 
   def init(init_arg) do
-    {:ok, init_arg}
+    # Start timer to see if too many malicious user actions close together
+    :timer.send_after(60000, self(), :check)
+    {:ok, %{}}
   end
 
   def handle_call({:join, id}, _from, state) do
@@ -25,6 +27,44 @@ defmodule GameMasterDirector do
     else
       {:reply, {:error, reply}, state}
     end
+  end
+
+  def handle_cast({:finalize, game_info}, state) do
+    _res = GameStrategy.addGame(game_info.lobby, game_info.started_time, game_info.winner, game_info.players)
+    for player <- game_info.players do
+      if player != game_info.winner do
+        modifyRank(player, -5)
+      else
+        modifyRank(player, 5)
+      end
+
+    end
+
+    _result = :ets.delete(:lobby_registry, game_info.lobby)
+    {:noreply, state}
+  end
+
+  def handle_cast({:red, user}, state) do
+    new_state = if Map.has_key?(state, user) do
+      state |> Map.put(user, Map.get(state, user) + 1)
+    else
+      state|> Map.put(user, 1)
+    end
+    {:noreply, new_state}
+  end
+
+  def handle_info(:check, state) do
+    red_user = Map.filter(state, fn {_key, value} -> value >= 3 end)
+    for {usr, _v} <- red_user do
+      IO.puts("Banning user #{usr}")
+      _result = HTTPoison.post("http://gateway:8080/banUser", Poison.encode!(%{id: usr}))
+    end
+    x = :timer.send_after(60000, self(), :check)
+    {:noreply, %{}}
+  end
+
+  def modifyRank(user_id, value) do
+    _result = HTTPoison.post("http://gateway:8080/changeRank", Poison.encode!(%{id: user_id, value: value}))
   end
 
   def createLobby(user_id) do

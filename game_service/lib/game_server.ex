@@ -39,24 +39,46 @@ defmodule GameServer do
 
   post "/join" do
     body = conn.body_params
-    {result, game}= GenServer.call(GameMasterDirector, {:join, Map.get(body, "id")})
-    if result != :ok do
-      send_resp(conn, 408, "Connection full")
+    user= GameStrategy.getUserInfo(Map.get(body, "id"))
+    if user == nil do
+      send_resp(conn, 401, "User is not logged in.")
     else
-      encoded_game = Poison.encode!(game)
-      send_resp(conn, 200, encoded_game)
+      if user["is_banned"] == true do
+        send_resp(conn, 403, "User is banned")
+      else
+        {result, game}= GenServer.call(GameMasterDirector, {:join, Map.get(body, "id")})
+        if result != :ok do
+          send_resp(conn, 408, "Connection full")
+        else
+        encoded_game = Poison.encode!(game)
+        send_resp(conn, 200, encoded_game)
     end
+      end
+  end
   end
 
   post "/privatejoin" do
     body = conn.body_params
-    {result, game} = GenServer.call(GameMasterDirector, {:joinprivate, Map.get(body, "id"), Map.get(body, "friend_id")})
-    if result != :ok do
-      send_resp(conn, 408, "Connection full")
-    else
-      encoded_game = Poison.encode!(game)
-      send_resp(conn, 200, encoded_game)
+    user= GameStrategy.getUserInfo(Map.get(body, "id"))
+    friends = for u <- Map.get(body, "friend_id") do
+      usr = GameStrategy.getUserInfo(u)
+      if usr != nil do
+        usr["is_banned"]
+      else
+        nil
+      end
     end
+    if user == nil or nil in friends or true in friends or user["is_banned"] == true do
+      send_resp(conn, 401, "One of the users is not online, or has been banned")
+    else
+      {result, game} = GenServer.call(GameMasterDirector, {:joinprivate, Map.get(body, "id"), Map.get(body, "friend_id")})
+      if result != :ok do
+        send_resp(conn, 408, "Connection full")
+      else
+        encoded_game = Poison.encode!(game)
+        send_resp(conn, 200, encoded_game)
+    end
+  end
   end
 
   match _ do

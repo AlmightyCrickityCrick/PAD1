@@ -13,20 +13,24 @@ defmodule GameStrategy do
   def addGame(lobby, started_time, winner, players) do
     changeset = Schemas.Game.changeset(%Schemas.Game{}, %{
       lobby_number: lobby,
-      time_started: DateTime.to_string(DateTime.utc_now()),
+      time_started: started_time,
       time_ended: DateTime.to_string(DateTime.utc_now()),
       winner: winner,
       players: players
       })
     {_result, game} = GameHistory.Repo.insert(changeset)
     IO.inspect(game)
-    addGameToCache(game)
     game
   end
 
-  def addGameToCache(game) do
-   result = Redix.command(:redix, ["SET", game.lobby_number, Poison.encode!(game)])
+  def getUserInfo(user_id) do
+   {result, user} = Redix.command(:redix, ["GET", user_id])
    IO.inspect(result)
+   if user == nil do
+    nil
+   else
+    Poison.decode!(user)
+   end
   end
 
 end

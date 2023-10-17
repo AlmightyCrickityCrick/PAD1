@@ -32,6 +32,22 @@ defmodule GameMaster do
     end
   end
 
+  def handle_call({:move, move}, _from, state) do
+    reply =
+      if(Map.get(move, "id") != state.current_player) do
+        _ = GenServer.cast(GameMasterDirector, {:red, Map.get(move, "id")})
+        nil
+      else
+        analyze_play(move, state)
+      end
+    {:reply, reply, state}
+  end
+
+  def handle_call({:exit, user_id}, _from, state) do
+    reply = nil
+    {:reply, reply, state}
+  end
+
   def create_user_deck(table_deck) do
     user_deck = Enum.take_random(table_deck, 7)
     previous_deck = table_deck
@@ -39,16 +55,6 @@ defmodule GameMaster do
       List.delete(acc, x)
     end  )
     {user_deck, new_deck}
-  end
-
-  def handle_call({:move, move}, _from, state) do
-    reply =
-      if(Map.get(move, "id") != state.current_player) do
-        nil
-      else
-        analyze_play(move, state)
-      end
-    {:reply, reply, state}
   end
 
   #TODO: Analyze play

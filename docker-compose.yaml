@@ -35,23 +35,23 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   
-  # game_service:
-  #   build: ./game_service
-  #   ports:
-  #     - "7070"
-  #   depends_on:
-  #     - game_history_database
-  #     - redis_game_cache
-  #     - service_discovery
-  #     - gateway
-  #   environment:
-  #     POSTGRES_HOST: game_history_database
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
-  #     endpoint_mode: dnsrr
+  game_service:
+    build: ./game_service
+    ports:
+      - "7070"
+    depends_on:
+      - game_history_database
+      - redis_game_cache
+      - service_discovery
+      - gateway
+    environment:
+      POSTGRES_HOST: game_history_database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: dnsrr
 
   ranking_service_database:
     image: postgres:latest
