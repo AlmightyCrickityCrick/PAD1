@@ -3,7 +3,7 @@ defmodule Schemas.Friend do
   # import Ecto.Changeset
 
   @derive {Poison.Encoder, only: [:user_id, :friend_id]}
-  schema "friends "do
+  schema "friends" do
     field :user_id, :id
     field :friend_id, :id
 

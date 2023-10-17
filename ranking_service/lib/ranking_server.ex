@@ -11,7 +11,7 @@ defmodule RankingServer do
   end
 
   post "/getHealth" do
-    
+
       send_resp(conn, 200, Poison.encode!(%{database: :ok, load: :ok}))
   end
 
@@ -54,8 +54,37 @@ defmodule RankingServer do
 
   end
 
+  get "/user/:usr_id/friends" do
+    friends = RankingStrategy.get_friends(usr_id)
+    IO.inspect(friends)
+    send_resp(conn, 200, Poison.encode!(friends))
+  end
 
+  post "/befriend/:usr_id" do
+    result = RankingStrategy.add_friend(String.to_integer(usr_id), conn.body_params["friend_id"])
+    if result == :ok do
+      send_resp(conn, 200, "")
+    else
+      send_resp(conn, 500, "Couldn't add friend. User might not exist.")
+    end
+  end
 
+  post "/unfriend/:usr_id" do
+    result = RankingStrategy.delete_friend(String.to_integer(usr_id), conn.body_params["friend_id"])
+    if result == :ok do
+      send_resp(conn, 200, "")
+    else
+      send_resp(conn, 500, "Couldn't add friend. User might not exist.")
+    end
+  end
+
+  post "/changeRank" do
+
+  end
+
+  post "/banUser" do
+
+  end
 
 
   match _ do
