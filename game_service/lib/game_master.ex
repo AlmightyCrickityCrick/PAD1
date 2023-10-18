@@ -41,14 +41,16 @@ defmodule GameMaster do
   end
 
   def handle_call({:move, move}, _from, state) do
-    reply =
+    {reply, new_state }=
       if(Map.get(move, "id") != state.current_player) do
         _ = GenServer.cast(GameMasterDirector, {:red, Map.get(move, "id")})
-        {:error, %{"accepted": false, hand_cards: state.decks[move["id"]], current_card: state.current_card, next_user_id: state.current_player}}
+        {{:error, %{accepted: false, hand_cards: state.decks[move["id"]], current_card: state.current_card, next_user_id: state.current_player}},state}
       else
-        analyze_play(move, state)
+        ns = analyze_play(move, state)
+        r = create_responses(ns)
+        {{:success, r}, ns}
       end
-    {:reply, reply, state}
+    {:reply, reply, new_state}
   end
 
   def handle_call({:exit, user_id}, _from, state) do
@@ -102,21 +104,63 @@ defmodule GameMaster do
     {user_deck, new_deck}
   end
 
+  def take_cards(table_deck, nr) do
+    user_deck = Enum.take_random(table_deck, nr)
+    previous_deck = table_deck
+    new_deck = Enum.reduce(user_deck, previous_deck, fn x, acc ->
+      List.delete(acc, x)
+    end  )
+    {user_deck, new_deck}
+  end
+
   #TODO: Analyze play
   def analyze_play(move, state) do
-    nil
     # Check if card is put or taken
+    cond do
+      "take_card" in move["move"] ->
+        nr = String.replace(move["move"], "take_card_", "") |> String.to_integer()
+        {new_cards, new_table}= take_cards(state.table_deck , nr)
+        new_current_player = select_next_player(state)
+        user_new_deck = Map.get(state.decks, move["id"]) ++ new_cards
+        all_new_decks = state.decks |> Map.put(move["id"], user_new_deck)
+        state |>
+        Map.put(:current_player, new_current_player) |>
+        Map.put(:table_deck, new_table) |>
+        Map.put(:decks, all_new_decks)
+      move["move"] == "put_card" ->
+        user_new_deck = state.decks[move["id"]] |> List.delete(move["card"])
+        new_rest_state = if move["card"] in ["plus4", "plus4", "plus4", "plus4", "color_change", "color_change", "color_change", "color_change"] do
+          cond do
+            move["card"] == "plus4" ->
+              {new_cards, new_table}= take_cards(state.table_deck , 4)
+              loser_new_deck = state.decks[select_next_player(state)] ++ new_cards
+              all_new_decks = state.decks |> Map.put(select_next_player(state), loser_new_deck)
+              state |>
+              Map.put(:current_card, move["color"]) |>
+              Map.put(:table_deck, new_table)|>
+              Map.put(:current_player, select_next_player(state)) |>
+              Map.put(:current_player, select_next_player(state)) |>
+              Map.put(:decks, all_new_decks)
 
-    # If put, check if it satisfies the current_card
-      # If it satisfies send back {:put, current_card}
-      # and modify the deck of the user, next user to play and the table deck value
+            move["card"] == "color_change" ->
+              state |> Map.put(:current_card, move["color"])
 
-      #Dont forget to analyze the special cards, that are supposed to change the
-      # orientation, color and add2 and 4 for the next user on the orientation
+          end
+        else
+          [first, last] = String.split(move["card"], "_")
+          if (first in state.current_card or last in state.current_card or state.current_card == nil) do
+            state |>
+            Map.put(:current_player, select_next_player(state)) |>
+            Map.put(:current_card, move["card"])
+          end
 
-    #If taken, send back {:taken, :card_value}, delete that card from table deck
-    # and add to user deck, increment next user to play
+        end
+        all_new_decks = new_rest_state.decks |> Map.put(move["id"], user_new_deck)
+        new_rest_state |> Map.put(:decks, all_new_decks)
 
+      true ->
+        state
+    end
   end
 
   def finalize_game(state, winner) do
