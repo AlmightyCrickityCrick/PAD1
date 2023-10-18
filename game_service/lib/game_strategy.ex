@@ -29,7 +29,9 @@ defmodule GameStrategy do
    if user == nil do
     nil
    else
-    Poison.decode!(user)
+    u = Poison.decode!(user)
+    IO.inspect(u)
+    u
    end
   end
 

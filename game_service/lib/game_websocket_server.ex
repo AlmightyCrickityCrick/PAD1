@@ -42,7 +42,10 @@ defmodule GameWebsocketServer do
         {:close, state}
 
       true ->
-        responses = GenServer.call(String.to_atom("lobby#{state.lobby_nr}"), {:move, message})
+        {move_state, responses} = GenServer.call(String.to_atom("lobby#{state.lobby_nr}"), {:move, message})
+        if (move_state == :error) do
+          {:reply, {:text, Poison.encode!(responses)}, state}
+        else
         GameRegistry
         |> Registry.dispatch(state.registry_key, fn(entries) ->
           for {pid, user_id} <- entries do
@@ -54,6 +57,7 @@ defmodule GameWebsocketServer do
         end)
 
         {:reply, {:text, Poison.encode!(responses[state.user_id])}, state}
+      end
   end
   end
 

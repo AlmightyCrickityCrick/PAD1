@@ -9,7 +9,16 @@ defmodule GameMaster do
   def init(init_arg) do
     players = Map.get(init_arg, :players)
     table_deck = get_full_deck()
-    {:ok, %{type: Map.get(init_arg, :type), players: players, current_player: List.first(players),  decks: Map.new(), table_deck: table_deck, current_card: nil, orientation: :end }}
+    {:ok,
+    %{name: Map.get(init_arg, :name),
+    type: Map.get(init_arg, :type),
+    players: players,
+    current_player: List.first(players),
+    decks: Map.new(),
+    table_deck: table_deck,
+    current_card: nil,
+    started_time: DateTime.to_string(DateTime.utc_now()),
+    orientation: :end }}
 
   end
 
@@ -25,7 +34,6 @@ defmodule GameMaster do
       new_decks = Map.get(state, :decks) |> Map.put(user_id, user_deck)
       new_state = state |> Map.put(:decks, new_decks) |> Map.put(:table_deck, table_deck)
 
-      #TODO: Format the message send to user upon connection (his deck)
       {:reply, %{status: :success, message: %{accepted: true, hand_cards: user_deck, next_user_id: state.current_player, current_card: state.current_card}}, new_state}
     else
       {:reply, %{status: :error, message: "You do not have access to this lobby. Please leave"}, state}
@@ -36,7 +44,7 @@ defmodule GameMaster do
     reply =
       if(Map.get(move, "id") != state.current_player) do
         _ = GenServer.cast(GameMasterDirector, {:red, Map.get(move, "id")})
-        nil
+        {:error, %{"accepted": false, hand_cards: state.decks[move["id"]], current_card: state.current_card, next_user_id: state.current_player}}
       else
         analyze_play(move, state)
       end
@@ -44,8 +52,45 @@ defmodule GameMaster do
   end
 
   def handle_call({:exit, user_id}, _from, state) do
-    reply = nil
-    {:reply, reply, state}
+    new_players = List.delete(state.players, user_id)
+    new_decks = Map.delete(state.decks, user_id)
+    new_current_player = if user_id == state.current_player do select_next_player(state) else state.current_player end
+    new_historical_players = if Map.has_key?(state, :historic_players) do [user_id | state[:historic_players]] else [user_id] end
+    new_state = state |> Map.put(:players, new_players) |> Map.put(:decks, new_decks) |> Map.put(:current_player, new_current_player) |>Map.put(:historic_players, new_historical_players)
+    cond do
+      length(new_players) == 0 ->
+        _res = :ets.delete(:lobby_registry, state.name)
+        send(self(), :die)
+        {:reply, "", new_state}
+      length(new_players) == 1 ->
+        finalize_game(new_state, List.first(new_players))
+        send(self(), :die)
+        response = %{List.first(new_players) => %{accepted: true, next_user_id: nil, winner_id: List.first(new_players)}}
+        {:reply, response, new_state}
+      length(new_players) >= 2 ->
+        GameMasterDirector.modifyRank(user_id, -10)
+        response = create_responses(new_state)
+        {:reply, response, new_state}
+    end
+  end
+
+  def handle_info(:die, state) do
+    {:stop, "Game finished", state}
+  end
+
+  def create_responses(state) do
+    for x <- state.players, into: %{} do
+      {x, %{accepted: true, hand_cards: Map.get(state[:decks], x), current_card: state.current_card, next_user_id: state.current_player}}
+    end
+  end
+
+  def select_next_player(state) do
+    player_id = Enum.find_index(state[:players], state.current_player)
+    if (state.orientation == :end) do
+      Enum.at(state[:players], player_id + 1, List.first(state[:players]))
+    else
+      Enum.at(state[:players], player_id - 1)
+    end
   end
 
   def create_user_deck(table_deck) do
@@ -72,6 +117,11 @@ defmodule GameMaster do
     #If taken, send back {:taken, :card_value}, delete that card from table deck
     # and add to user deck, increment next user to play
 
+  end
+
+  def finalize_game(state, winner) do
+    p = if Map.has_key?(state, :historic_players) do state.historic_players ++ state.players else state.players end
+    GenServer.cast(GameMasterDirector, {:finalize, %{lobby: state.name, players: p, started_time: state.started_time, winner: winner }})
   end
 
 
