@@ -2,6 +2,7 @@ version: '3'
 services:
   service_discovery:
     build: ./ServiceDiscovery/service-discovery
+    image: almightycrickitycrick/service_discovery
     ports:
       - "8080"
     volumes:
@@ -9,6 +10,7 @@ services:
   
   gateway:
     build: ./Gateway/gateway
+    image: almightycrickitycrick/gateway
     ports:
       - "8080:8080"
       - "7070"
@@ -19,6 +21,7 @@ services:
 
   ranking_service:
     build: ./ranking_service
+    image: almightycrickitycrick/ranking_service
     ports: 
       - "8080"
     depends_on:
@@ -37,6 +40,7 @@ services:
   
   game_service:
     build: ./game_service
+    image: almightycrickitycrick/game_service
     ports:
       - "7070"
     depends_on:

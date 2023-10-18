@@ -180,6 +180,55 @@ Response: 200 OK
 
 ```
 
+There are additional gRPC endpoints mapped to server listening to internal port 7070, but they are for Service Discovery to communicate over:
+- Add new Service
+```
+Endpoint: /addService
+Method: POST
+Payload: {
+    "address" : 170.0.0.1,
+    "type" : "game_service",
+    "internal_port": 8080,
+    "external_port": 59032
+}
+Response: 
+{
+    "success": 1,
+}
+
+```
+- Update Service Load
+```
+Endpoint: /updateService
+Method: POST
+Payload: {
+    "address" : 170.0.0.1,
+    "load": 4,
+}
+Response: 
+{
+    "success": 1,
+}
+
+```
+
+- Delete Service
+```
+Endpoint: /removeService
+Method: POST
+Payload: {
+    "address" : 170.0.0.1,
+    "type" : "game_service",
+    "internal_port": 8080,
+    "external_port": 59032
+}
+Response: 
+{
+    "success": 1,
+}
+
+```
+
 ### Service Discovery:
 - Service Registration
 ```
@@ -395,14 +444,14 @@ Response:
 }
 
 ```
-- Exit Lobby
 ```
-Endpoint: /exit/lobbyid234/
-Method: POST
 Payload: {
     "userid" : "12345,
+    "exit": true
 }
-Response: 200 OK
+Response: {
+    Will disconnect websocket
+}
 ```
 - Get all the games played by a user
 ```
@@ -436,6 +485,19 @@ Response: 503 Service Unavailable
 ## Deployment and Scaling
 The services are expected to be deployed using Docker, with horizontal scaling being accounted for the User System and Game System. As the services are expected to be replicas, no Host port can be set within the Docker Compose file (Thanks v2), so the services are running requests to the Daemon to find their own ports. Please make sure in the docker settings that the tcp:2375 port is exposed to non tlc protected connections.
 (Not good, but it is what it is)
+
+## Running 
+In order to run the application, the compose file must be used.
+First run: 
+```docker compose pull```
+And then: 
+```docker compose up```
+The app will be listening on port 8080. You can use Postman for testing the HTTP and Websockets. The ranking service and game service may take a while to go up, they require additional installations, it is fine.
+
+**Please configure Docker settings to Expose daemon on tcp://localhost:2375 without TLS. The service use the Docker API liberally for registartion and will not work without them**
+
+
+
 ## Bibliography
 
 [1] [Peer to Peer vs Server Hosted Games](https://www.servers.com/news/blog/differences-between-peer-to-peer-and-dedicated-game-server-hosting) 
