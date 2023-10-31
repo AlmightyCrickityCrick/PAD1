@@ -489,14 +489,36 @@ The services are expected to be deployed using Docker, with horizontal scaling b
 ## Running 
 In order to run the application, the compose file must be used.
 First run: 
+
 ```docker compose pull```
+
 And then: 
+
 ```docker compose up```
+
 The app will be listening on port 8080. You can use Postman for testing the HTTP and Websockets. The ranking service and game service may take a while to go up, they require additional installations, it is fine.
 
 **Please configure Docker settings to Expose daemon on tcp://localhost:2375 without TLS. The service use the Docker API liberally for registartion and will not work without them**
 
+The app allows /join and /privatejoin requests to go through and return the address of the Websocket to which the user should be connected to the game **ONLY IF THE USER/USERS WHOSE IDS ARE WITHIN THE REQUEST HAVE ACCESSED THE /login OR /register ENDPOINT WITHIN THE LAST HOUR**
 
+For a quick and hastleless testing of the game start and finish I recommend calling /join with two users with no more than a minute between the requests. Connecting them both to the right Websocket with their ID as query param, and then making one of them use the exit message:
+
+```
+Payload: {
+    "userid" : "12345,
+    "exit": true
+}
+Response: {
+    Will disconnect websocket
+}
+```
+
+The game will be counted as finished and their scores updated with minimal bugs compared to triggering possible illegal moves within the game related messages.
+
+To trigger an automatic ban from the Gaming System - you may try to send the exit message with the userId differing from the query param id 3 times.
+
+Besides this, all other routes can be tested with the attached postman collection. Beware that the addGame route isn't exposed to the Gateway, as it sould not be accessible to the user, so you may want to specify which host port a Gaming Service container is running on before trying it out.
 
 ## Bibliography
 
