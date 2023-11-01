@@ -11,7 +11,7 @@ There are quite a few proposals for Server Side Processed games available that m
 ## Service Boundaries
 The application will have the following architecture, with the service boundaries being described below:
 
-![The Architecture Diagram of the System](https://github.com/AlmightyCrickityCrick/PAD1/blob/main/PAD_Lab2._Architecture_Diagram.png)
+![The Architecture Diagram of the System](https://github.com/AlmightyCrickityCrick/PAD1/blob/Lab2/PAD_Lab2._Architecture_Diagram.png)
 
 Gateway - Route the client requests to the proper service swarm;
 
