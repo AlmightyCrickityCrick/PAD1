@@ -11,14 +11,27 @@ There are quite a few proposals for Server Side Processed games available that m
 ## Service Boundaries
 The application will have the following architecture, with the service boundaries being described below:
 
-![The Architecture Diagram of the System](https://github.com/AlmightyCrickityCrick/PAD1/blob/main/PAD_Lab1._Architecture_Diagram.png)
+![The Architecture Diagram of the System](https://github.com/AlmightyCrickityCrick/PAD1/blob/main/PAD_Lab2._Architecture_Diagram.png)
 
 Gateway - Route the client requests to the proper service swarm;
-Load Balancer - Select a service to handle the incoming request from the assigned swarm;
+
 Service Discovery - Keep registry of the existing service addresses and periodically check their health. If the health is not satisfactory, notifies the other services not to route through them and logs the defect;
+
 User Service - Handle HTTP requests related to user login/register/state modification;
+
 Game Service - Handle requests related to game process and lobbies;
-Cache - Will temporarily store the information about the ongoing game processes.
+
+RedisDB - Will temporarily store information about logged in users;
+
+Sentinels - Redis specific services for Cache High Availability that monitor RedisDB health and elect a new Master upon previous master death;
+
+Overseer - Service that manages Databases to ensure that data is replicated and all services have access to it;
+
+ETL - Service responsible for extraction, transformation and load of data from the Ranking and Game Databases into the Warehouse Database.
+
+Prometeus - Service that monitors other services' statistical data and collects it.
+
+Grafana - Service that displays graphically the data collected by Prometeus.
 
 ## Technology Stack and Communication Patterns
 The User Service and Game Service will be written in Elixir, while the Gateway, Service Discovery and Load Balancer will be written in Kotlin, using the Ktor library. The User Service will receive RESTful requests from users, while the Game Service will also make use of Websockets or TCP sockets for the game within the lobby. Communication between the Service Discovery and the rest of the components will be through HTTP with RPC type requests.
