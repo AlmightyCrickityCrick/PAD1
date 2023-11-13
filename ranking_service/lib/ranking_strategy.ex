@@ -86,11 +86,15 @@ defmodule RankingStrategy do
 
   def change_rank(user_id, value) do
     user = get_user(user_id)
+    if user == nil do
+      nil
+    else
     changeset = user |> Schemas.Player.changeset(%{rank: user.rank + value})
     IO.inspect(changeset)
     {_success, new_user} =  changeset|> Players.Repo.update()
     addUserToCache(new_user)
     :ok
+    end
   end
 
   def ban_user(user_id) do

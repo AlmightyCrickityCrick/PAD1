@@ -83,6 +83,40 @@ defmodule RankingServer do
     send_resp(conn, 200, "")
   end
 
+  post "/bulkDerank" do
+    winner_id = conn.body_params["winner"]
+    players_id = conn.body_params["players"]
+    res = for p <- players_id do
+      if p == winner_id do
+        RankingStrategy.change_rank(p, -10)
+      else
+        RankingStrategy.change_rank(p, +5)
+      end
+    end
+    if Enum.member?(res, nil) do
+      send_resp(conn, 400, "Player not found")
+    else
+      send_resp(conn, 200, "")
+    end
+  end
+
+  post "/bulkUprank" do
+    winner_id = conn.body_params["winner"]
+    players_id = conn.body_params["players"]
+    res = for p <- players_id do
+      if p == winner_id do
+        RankingStrategy.change_rank(p, 10)
+      else
+        RankingStrategy.change_rank(p, -5)
+      end
+    end
+    if Enum.member?(res, nil) do
+      send_resp(conn, 400, "Player not found")
+    else
+      send_resp(conn, 200, "")
+    end
+  end
+
   post "/banUser" do
     _result = RankingStrategy.ban_user(conn.body_params["id"])
     send_resp(conn, 200, "")
