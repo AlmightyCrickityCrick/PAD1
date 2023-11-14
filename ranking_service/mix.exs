@@ -30,7 +30,10 @@ defmodule RankingService.MixProject do
       {:ecto_sql, "~> 3.2"},
       {:postgrex, "~> 0.15"},
       {:redix, "~> 1.1"},
-      {:castore, ">= 0.0.0"}
+      {:castore, ">= 0.0.0"},
+      {:nebulex_redis_adapter, "~> 2.3"},
+      {:crc, "~> 0.10"},
+      {:jchash, "~> 0.1.3"}
     ]
   end
 end

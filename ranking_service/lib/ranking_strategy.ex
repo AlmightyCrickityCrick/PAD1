@@ -19,7 +19,9 @@ defmodule RankingStrategy do
   end
 
   def addUserToCache(user) do
-    result = Redix.command(:redix, ["SET", user.id, Poison.encode!(user), "EX", 3600])
+    IO.puts("Trying to add to Cache")
+    # result = RedisCache.command!(["SET", user.id, Poison.encode!(user), "EX", 3600], user.id)
+    result = RedisCache.put(user.id, Poison.encode!(user))
     IO.inspect(result)
    end
 

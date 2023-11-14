@@ -1,4 +1,19 @@
 version: '3'
+
+networks: 
+  redis_cluster_net: 
+    driver: bridge 
+    ipam: 
+      driver: default 
+      config: 
+        - subnet: 173.18.0.0/16 
+  uno_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.13.0.0/16
+
 services:
   service_discovery:
     build: ./ServiceDiscovery/service-discovery
@@ -7,6 +22,8 @@ services:
       - "8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - uno_net
   
   gateway:
     build: ./Gateway/gateway
@@ -18,6 +35,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - service_discovery
+    networks:
+      - uno_net
 
   ranking_service:
     build: ./ranking_service
@@ -26,7 +45,7 @@ services:
       - "8080"
     depends_on:
       - ranking_service_database
-      - redis_game_cache
+      - cluster_initiator
       - service_discovery
       - gateway
     environment:
@@ -37,6 +56,9 @@ services:
       endpoint_mode: dnsrr
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - uno_net
+
   
   game_service:
     build: ./game_service
@@ -45,7 +67,7 @@ services:
       - "7070"
     depends_on:
       - game_history_database
-      - redis_game_cache
+      - cluster_initiator
       - service_discovery
       - gateway
     environment:
@@ -56,6 +78,9 @@ services:
       mode: replicated
       replicas: 2
       endpoint_mode: dnsrr
+    networks:
+      - uno_net
+
 
   ranking_service_database:
     image: postgres:latest
@@ -67,14 +92,64 @@ services:
       - postgres_ranking_data:/var/lib/postgresql/data
     ports:
       - "5432"
+    networks:
+      - uno_net
 
-  redis_game_cache:
-    image: redis:alpine
+
+
+  redis_cache_node_1:
+    image: redis:7-alpine
     restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
     ports:
       - '6379'
     volumes: 
-      - redis_game_cache:/data
+      - redis_cache_node1:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.5
+      uno_net:
+    
+
+  redis_cache_node_2:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
+    ports:
+      - '6379'
+    volumes: 
+      - redis_cache_node2:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.6
+      uno_net:
+  
+  redis_cache_node_3:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no 
+    ports:
+      - '6379'
+    volumes: 
+      - redis_cache_node3:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.7
+      uno_net:
+  
+  cluster_initiator: 
+    image: redis:latest 
+    command: redis-cli --cluster create 173.18.0.5:6379 173.18.0.6:6379 173.18.0.7:6379 --cluster-replicas 0 --cluster-yes 
+    ports:
+      - '9090:9090'
+    depends_on: 
+      - redis_cache_node_1
+      - redis_cache_node_2
+      - redis_cache_node_3
+
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.11 
 
   game_history_database:
     image: postgres:latest
@@ -86,8 +161,13 @@ services:
       - postgres_game_data:/var/lib/postgresql/data
     ports:
       - "5432"
+    networks:
+      - uno_net
+
 
 volumes:
   postgres_ranking_data:
   postgres_game_data:
-  redis_game_cache:
+  redis_cache_node1:
+  redis_cache_node2:
+  redis_cache_node3:

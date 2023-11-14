@@ -24,8 +24,10 @@ defmodule GameStrategy do
   end
 
   def getUserInfo(user_id) do
-   {result, user} = Redix.command(:redix, ["GET", user_id])
-   IO.inspect(result)
+  #  {result, user} = RedisCache.command(["GET", user_id])
+  #  user = RedisCache.command!(["GET", user_id], user_id)
+  user = RedisCache.get(user_id)
+   IO.inspect(user)
    if user == nil do
     nil
    else

@@ -10,7 +10,8 @@ defmodule RankingService do
     children = [
       {Plug.Cowboy, scheme: :http, plug: RankingServer, options: [port: 8080] },
       Players.Repo,
-      {Redix, host: "redis_game_cache", name: :redix, port: 6379}
+      RedisCache,
+      # {Redix, host: "redis_game_cache", name: :redix, port: 6379}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)

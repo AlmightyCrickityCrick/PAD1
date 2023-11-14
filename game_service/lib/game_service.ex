@@ -12,10 +12,11 @@ defmodule GameService do
     children = [
       {Plug.Cowboy, scheme: :http, plug:  GameServer, options: [port: 7070, dispatch: dispatch()] },
       GameHistory.Repo,
+      RedisCache,
       {Registry, keys: :duplicate, name: GameRegistry},
       Supervisor.child_spec({GameLobbySupervisor, []}, id: :lobby_sup, restart: :permanent),
       Supervisor.child_spec({GameMasterDirector, []}, id: :game_master_director, restart: :permanent),
-      {Redix, host: "redis_game_cache", name: :redix, port: 6379}
+      # {Redix, host: "redis_game_cache", name: :redix, port: 6379}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
