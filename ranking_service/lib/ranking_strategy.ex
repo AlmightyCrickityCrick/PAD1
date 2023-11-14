@@ -22,6 +22,7 @@ defmodule RankingStrategy do
     IO.puts("Trying to add to Cache")
     # result = RedisCache.command!(["SET", user.id, Poison.encode!(user), "EX", 3600], user.id)
     result = RedisCache.put(user.id, Poison.encode!(user))
+    r = RedisCache.expire(user.id, 3600000)
     IO.inspect(result)
    end
 
