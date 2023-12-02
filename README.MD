@@ -540,7 +540,7 @@ Prometheus and Grafana are running locally on the ```http://localhost:9090/``` a
 
 ```ktor_http_server_requests_seconds_count```
 
-To access Grafana, the username and password may be set to admin and admin. 
+To access Grafana, the username and password may be set to admin and admin, with the Dashboard itself being available at ```http://localhost:3000/dashboards```, under the Services folder.
 
 ## Bibliography
 
