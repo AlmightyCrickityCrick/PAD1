@@ -1,0 +1,41 @@
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090', 'host.docker.internal:9090']
+  
+  - job_name: "gateway"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:8080', 'host.docker.internal:8080']
+
+  # - job_name: 'ranking_service'
+  #   scrape_interval: 10s
+  #   dns_sd_configs:
+  #   - names:
+  #     - 'tasks.ranking_service'
+  #     type: 'A'
+  #     port: 8080
+  
+  # - job_name: 'gaming_service'
+  #   scrape_interval: 10s
+  #   dns_sd_configs:
+  #   - names:
+  #     - 'tasks.game_service'
+  #     type: 'A'
+  #     port: 7070
+# remote_write:
+#   - url: https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push
+#     basic_auth:
+#       username: 1313569
+#       password: glc_eyJvIjoiMTAwMjQyNSIsIm4iOiJzdGFjay04MDI4MjctaW50ZWdyYXRpb24tcGFkLWxhYiIsImsiOiJ3M1kxNDRGOFdFRDZEMU9JTmNBODF0YzgiLCJtIjp7InIiOiJwcm9kLWV1LXdlc3QtMiJ9fQ==

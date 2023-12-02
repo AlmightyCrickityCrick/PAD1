@@ -141,7 +141,7 @@ services:
     image: redis:latest 
     command: redis-cli --cluster create 173.18.0.5:6379 173.18.0.6:6379 173.18.0.7:6379 --cluster-replicas 0 --cluster-yes 
     ports:
-      - '9090:9090'
+      - '3090:3090'
     depends_on: 
       - redis_cache_node_1
       - redis_cache_node_2
@@ -164,6 +164,30 @@ services:
     networks:
       - uno_net
 
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --storage.tsdb.retention.time=7d
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - prometheus_data:/prometheus
+    networks:
+      - uno_net
+    ports:
+      - 9090:9090
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - uno_net
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+
 
 volumes:
   postgres_ranking_data:
@@ -171,3 +195,5 @@ volumes:
   redis_cache_node1:
   redis_cache_node2:
   redis_cache_node3:
+  prometheus_data: 
+  grafana_data: 

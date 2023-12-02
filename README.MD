@@ -533,6 +533,15 @@ To trigger an automatic ban from the Gaming System - you may try to send the exi
 
 Besides this, all other routes can be tested with the attached postman collection. Beware that the addGame route isn't exposed to the Gateway, as it sould not be accessible to the user, so you may want to specify which host port a Gaming Service container is running on before trying it out.
 
+### Prometheus and Grafana
+Prometheus and Grafana are running locally on the ```http://localhost:9090/``` and ```http://localhost:3000/```, respectively. In order to visualize metrics in prometheus the following queries may be viewed: 
+
+```ktor_http_server_requests_active```
+
+```ktor_http_server_requests_seconds_count```
+
+To access Grafana, the username and password may be set to admin and admin. 
+
 ## Bibliography
 
 [1] [Peer to Peer vs Server Hosted Games](https://www.servers.com/news/blog/differences-between-peer-to-peer-and-dedicated-game-server-hosting) 

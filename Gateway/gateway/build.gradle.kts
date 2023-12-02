@@ -56,6 +56,9 @@ dependencies {
     api("io.grpc:grpc-kotlin-stub:1.2.1")
     api("io.grpc:grpc-stub:1.44.0")
     implementation("io.grpc:grpc-netty:1.44.0")
+
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktor_version")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.3")
 }
 
 ktor {
