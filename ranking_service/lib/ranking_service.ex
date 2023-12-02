@@ -6,7 +6,6 @@ defmodule RankingService do
     {container_id, host_port} = figure_out_self()
     IO.puts("Hi i am #{container_id} listening to #{host_port}")
     register(container_id, host_port)
-
     children = [
       {Plug.Cowboy, scheme: :http, plug: RankingServer, options: [port: 8080] },
       Players.Repo,

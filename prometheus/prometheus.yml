@@ -23,7 +23,7 @@ scrape_configs:
   #   scrape_interval: 10s
   #   dns_sd_configs:
   #   - names:
-  #     - 'tasks.ranking_service'
+  #     - 'ranking_service'
   #     type: 'A'
   #     port: 8080
   
@@ -31,6 +31,6 @@ scrape_configs:
   #   scrape_interval: 10s
   #   dns_sd_configs:
   #   - names:
-  #     - 'tasks.game_service'
+  #     - 'game_service'
   #     type: 'A'
   #     port: 7070
