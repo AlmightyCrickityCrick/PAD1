@@ -34,8 +34,3 @@ scrape_configs:
   #     - 'tasks.game_service'
   #     type: 'A'
   #     port: 7070
-# remote_write:
-#   - url: https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push
-#     basic_auth:
-#       username: 1313569
-#       password: glc_eyJvIjoiMTAwMjQyNSIsIm4iOiJzdGFjay04MDI4MjctaW50ZWdyYXRpb24tcGFkLWxhYiIsImsiOiJ3M1kxNDRGOFdFRDZEMU9JTmNBODF0YzgiLCJtIjp7InIiOiJwcm9kLWV1LXdlc3QtMiJ9fQ==
