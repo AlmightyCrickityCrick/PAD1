@@ -52,7 +52,7 @@ services:
       POSTGRES_HOST: ranking_service_repo
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       endpoint_mode: dnsrr
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -76,7 +76,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
       endpoint_mode: dnsrr
     networks:
       - uno_net
@@ -88,14 +88,93 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: ranking_service_repo
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_user
     volumes:
       - postgres_ranking_data:/var/lib/postgresql/data
+      - ./my-postgres.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./my-pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - data-slave:/var/lib/postgresql/data-slave
     ports:
       - "5432"
     networks:
       - uno_net
 
+  initialize_db:
+    image: postgres:latest
+    depends_on:
+      - ranking_service_database
+    environment:
+      PGPASSWORD: pass
+    command: >
+      bash -c "psql -h ranking_service_database -U user -d ranking_service_repo -c 
+      \"CREATE USER repl_user REPLICATION LOGIN ENCRYPTED PASSWORD 'repl_user'; 
+      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO repl_user; 
+      ALTER USER repl_user WITH SUPERUSER;
+      SELECT pg_create_physical_replication_slot('replication_slot');\""
+    networks:
+      - uno_net
 
+  ranking_service_database_slave_1:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: repl_user
+      POSTGRES_PASSWORD: repl_user
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_MASTER_HOST: ranking_service_database
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+      PGUSER: repl_user
+      PGPASSWORD: repl_user
+    ports:
+      - "5432"
+    volumes:
+      - data-slave:/var/lib/postgresql/data
+    command: |
+      bash -c "
+      until pg_basebackup -D /var/lib/postgresql/data-slave --host=ranking_service_database --port=5432 -S replication_slot -X stream -P -U repl_user -Fp -R
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
+    networks:
+      - uno_net
+    depends_on:
+      - ranking_service_database
+
+  # ranking_service_database_slave_2:
+  #   image: postgres:latest
+  #   environment:
+  #     POSTGRES_USER: repl_user
+  #     POSTGRES_PASSWORD: repl_user
+  #     POSTGRESQL_REPLICATION_MODE: slave
+  #     POSTGRESQL_MASTER_HOST: ranking_service_database
+  #     POSTGRESQL_MASTER_PORT_NUMBER: 5432
+  #     POSTGRESQL_REPLICATION_USER: repl_user
+  #     POSTGRESQL_REPLICATION_PASSWORD: repl_user
+  #   ports:
+  #     - "5432"
+  #   networks:
+  #     - uno_net
+  #   depends_on:
+  #     - ranking_service_database
+
+  # uno_warehouse_database:
+  #   image: postgres:latest
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: pass
+  #     POSTGRES_DB: warehouse_repo
+  #   volumes:
+  #     - postgres_warehouse_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432"
+  #   networks:
+  #     - uno_net
 
   redis_cache_node_1:
     image: redis:7-alpine
@@ -164,34 +243,36 @@ services:
     networks:
       - uno_net
 
-  prometheus:
-    image: prom/prometheus:latest
-    command:
-      - --storage.tsdb.retention.time=7d
-      - --config.file=/etc/prometheus/prometheus.yml
-    volumes:
-      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
-      - prometheus_data:/prometheus
-    networks:
-      - uno_net
-    ports:
-      - 9090:9090
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   command:
+  #     - --storage.tsdb.retention.time=7d
+  #     - --config.file=/etc/prometheus/prometheus.yml
+  #   volumes:
+  #     - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - uno_net
+  #   ports:
+  #     - 9090:9090
   
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    networks:
-      - uno_net
-    volumes:
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - grafana_data:/var/lib/grafana
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - uno_net
+  #   volumes:
+  #     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+  #     - ./grafana/datasources:/etc/grafana/provisioning/datasources
+  #     - grafana_data:/var/lib/grafana
 
 
 volumes:
   postgres_ranking_data:
   postgres_game_data:
+  data-slave:
+  postgres_warehouse_data:
   redis_cache_node1:
   redis_cache_node2:
   redis_cache_node3:

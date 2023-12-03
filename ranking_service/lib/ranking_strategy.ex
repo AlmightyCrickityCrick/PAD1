@@ -35,7 +35,7 @@ defmodule RankingStrategy do
         })
         IO.inspect(changeset)
       {_result, user} = Players.Repo.insert(changeset)
-      addUserToCache(user)
+      r = addUserToCache(user)
       IO.inspect(user)
       user
     rescue
