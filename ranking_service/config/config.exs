@@ -1,27 +1,28 @@
 import Config
 
-config :ranking_service, Players.Repo,
-  database: "ranking_service_repo",
-  username: "user",
-  password: "pass",
-  hostname: "ranking_service_database",
-  port: 5432
+# config :ranking_service, Players.Repo,
+#   database: "ranking_service_repo",
+#   username: "user",
+#   password: "pass",
+#   hostname: "ranking_service_database",
+#   port: 5432
 
-  # repos = %{
-  #   Players.Repo.Replica1 => "ranking_service_database_slave_1",
-  #   # Players.Repo.Replica2 => "ranking_service_database_slave_2",
-  # }
+  repos = %{
+    Players.Repo => "ranking_service_database",
+    Players.Repo.Replica1 => "ranking_service_database_slave_1",
+    Players.Repo.Replica2 => "ranking_service_database_slave_2",
+  }
 
-  # for {repo, hostname} <- repos do
-  #   config :ranking_service, repo,
-  #     username: "repl_user",
-  #     password: "repl_user",
-  #     database: "ranking_service_repo",
-  #     hostname: hostname,
-  #     pool_size: 10
-  # end
+  for {repo, hostname} <- repos do
+    config :ranking_service, repo,
+      username: "user",
+      password: "pass",
+      database: "ranking_service_repo",
+      hostname: hostname,
+      pool_size: 10
+  end
 
-config :ranking_service, ecto_repos: [Players.Repo]
+config :ranking_service, ecto_repos: [Players.Repo, Players.Repo.Replica1, Players.Repo.Replica2]
 
 config :ranking_service, RedisCache,
   mode: :redis_cluster,

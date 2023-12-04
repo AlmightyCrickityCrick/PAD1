@@ -1,18 +1,18 @@
 defmodule EtlOverseer do
-  @moduledoc """
-  Documentation for `EtlOverseer`.
-  """
+  use Application
 
-  @doc """
-  Hello world.
+  def start(_type, _args) do
+    children = [
+      Players.Repo,
+      Players.Repo.Replica1,
+      Players.Repo.Replica2,
+      GameHistory.Repo,
+      UnoWarehouse.Repo,
+      # Supervisor.child_spec({EtlScheduler, []}, id: :etl_scheduler, restart: :permanent),
+      Supervisor.child_spec({ReplicationOverseer, []}, id: :replication_overseer, restart: :permanent),
 
-  ## Examples
+    ]
 
-      iex> EtlOverseer.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end

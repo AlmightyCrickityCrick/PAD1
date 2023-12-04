@@ -15,6 +15,11 @@ defmodule RankingServer do
       send_resp(conn, 200, Poison.encode!(%{database: :ok, load: :ok}))
   end
 
+  post "/updateDB" do
+    GenServer.cast(DatabaseTracker, {:change_repo, conn.body_params})
+    send_resp(conn, 200, "")
+  end
+
 
   post "/register" do
     player = conn.body_params

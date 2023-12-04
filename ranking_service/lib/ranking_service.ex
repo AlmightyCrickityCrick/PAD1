@@ -9,9 +9,10 @@ defmodule RankingService do
     children = [
       {Plug.Cowboy, scheme: :http, plug: RankingServer, options: [port: 8080] },
       Players.Repo,
-      # Players.Repo.Replica1,
-      # Players.Repo.Replica2,
+      Players.Repo.Replica1,
+      Players.Repo.Replica2,
       RedisCache,
+      Supervisor.child_spec({DatabaseTracker, []}, id: :database_tracker, restart: :permanent )
       # {Redix, host: "redis_game_cache", name: :redix, port: 6379}
     ]
 
