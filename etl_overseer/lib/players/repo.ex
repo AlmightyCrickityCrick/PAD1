@@ -15,9 +15,8 @@ defmodule Players.Repo do
     for repo <- @replicas do
       defmodule repo do
         use Ecto.Repo,
-          otp_app: :ranking_service,
-          adapter: Ecto.Adapters.Postgres,
-          read_only: true
+          otp_app: :etl_overseer,
+          adapter: Ecto.Adapters.Postgres
       end
     end
 end

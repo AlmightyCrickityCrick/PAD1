@@ -18,8 +18,7 @@ import Config
       username: "user",
       password: "pass",
       database: "ranking_service_repo",
-      hostname: hostname,
-      pool_size: 10
+      hostname: hostname
   end
 
 config :ranking_service, ecto_repos: [Players.Repo, Players.Repo.Replica1, Players.Repo.Replica2]
@@ -31,6 +30,13 @@ config :ranking_service, RedisCache,
     endpoint1_conn_opts: [
       host: "redis_cache_node_1",
       port: 6379
+      ],
+      endpoint2_conn_opts: [
+        url: "redis://redis_cache_node_2:6379"
+
+      ],
+      endpoint3_conn_opts: [
+        url: "redis://redis_cache_node_3:6379"
       ]
     ],
     override_master_host: true

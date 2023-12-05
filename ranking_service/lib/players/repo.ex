@@ -16,8 +16,7 @@ defmodule Players.Repo do
     defmodule repo do
       use Ecto.Repo,
         otp_app: :ranking_service,
-        adapter: Ecto.Adapters.Postgres,
-        read_only: true
+        adapter: Ecto.Adapters.Postgres
     end
   end
 

@@ -234,6 +234,12 @@ fun Application.configureGamingToRankingRouting(){
             }
             if(!requestSuccessful) call.respond(HttpStatusCode.ServiceUnavailable)
         }
+        post("/updateDB"){
+            for (cr in 0..<rankingServices.size){
+               var response = sendRankingRequest("http://${rankingServices[cr].address}:${rankingServices[cr].internal_port}/updateDB", call.receive<String>(), 1 )
+            }
+            call.respond(HttpStatusCode.OK)
+        }
 
         post("/addGame"){
             val body = call.receive<String>()

@@ -3,7 +3,7 @@ defmodule UnoWarehouse.Repo.Migrations.CreateWarehouseTables do
 
   def change do
     create table(:players_evo) do
-      add :user_id, :string, null: false, unique: true
+      add :user_id, :integer, null: false
       add :rank, :integer, default: 1
       add :is_banned, :boolean, default: false
       add :time, :string

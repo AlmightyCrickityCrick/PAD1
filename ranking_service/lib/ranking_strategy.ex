@@ -29,6 +29,7 @@ defmodule RankingStrategy do
     # result = RedisCache.command!(["SET", user.id, Poison.encode!(user), "EX", 3600], user.id)
     result = RedisCache.put(user.id, Poison.encode!(user))
     r = RedisCache.expire(user.id, 3600000)
+    Io.puts("Should have been added to Cache")
     IO.inspect(result)
    end
 
@@ -44,6 +45,7 @@ defmodule RankingStrategy do
       {_result, user} = repo.insert(changeset)
       r = addUserToCache(user)
       IO.inspect(user)
+      IO.puts("Returning user")
       user
     rescue
       _ -> nil

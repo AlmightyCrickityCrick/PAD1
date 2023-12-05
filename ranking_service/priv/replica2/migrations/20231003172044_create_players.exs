@@ -1,4 +1,4 @@
-defmodule Players.Repo.Replica2.Migrations.CreatePlayers do
+defmodule Players.Repo.Migrations.CreatePlayers do
   use Ecto.Migration
 
   def change do
