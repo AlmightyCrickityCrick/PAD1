@@ -18,7 +18,9 @@ import Config
       username: "user",
       password: "pass",
       database: "ranking_service_repo",
-      hostname: hostname
+      hostname: hostname,
+      port: 5432,
+      pool_size: 10
   end
 
 config :ranking_service, ecto_repos: [Players.Repo, Players.Repo.Replica1, Players.Repo.Replica2]

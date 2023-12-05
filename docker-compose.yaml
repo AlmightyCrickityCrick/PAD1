@@ -15,71 +15,71 @@ networks:
         - subnet: 192.13.0.0/16
 
 services:
-  # service_discovery:
-  #   build: ./ServiceDiscovery/service-discovery
-  #   # image: almightycrickitycrick/service_discovery
-  #   ports:
-  #     - "8080"
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   networks:
-  #     - uno_net
+  service_discovery:
+    build: ./ServiceDiscovery/service-discovery
+    # image: almightycrickitycrick/service_discovery
+    ports:
+      - "8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - uno_net
   
-  # gateway:
-  #   build: ./Gateway/gateway
-  #   # image: almightycrickitycrick/gateway
-  #   ports:
-  #     - "8080:8080"
-  #     - "7070"
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - service_discovery
-  #   networks:
-  #     - uno_net
+  gateway:
+    build: ./Gateway/gateway
+    # image: almightycrickitycrick/gateway
+    ports:
+      - "8080:8080"
+      - "7070"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - service_discovery
+    networks:
+      - uno_net
 
-  # ranking_service:
-  #   build: ./ranking_service
-  #   # image: almightycrickitycrick/ranking_service
-  #   ports: 
-  #     - "8080"
-  #   depends_on:
-  #     - ranking_service_database
-  #     - cluster_initiator
-  #     - service_discovery
-  #     - gateway
-  #   environment:
-  #     POSTGRES_HOST: ranking_service_repo
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
-  #     endpoint_mode: dnsrr
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   networks:
-  #     - uno_net
+  ranking_service:
+    build: ./ranking_service
+    # image: almightycrickitycrick/ranking_service
+    ports: 
+      - "8080"
+    depends_on:
+      - ranking_service_database
+      - cluster_initiator
+      - service_discovery
+      - gateway
+    environment:
+      POSTGRES_HOST: ranking_service_repo
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - uno_net
 
   
-  # game_service:
-  #   build: ./game_service
-  #   # image: almightycrickitycrick/game_service
-  #   ports:
-  #     - "7070"
-  #   depends_on:
-  #     - game_history_database
-  #     - cluster_initiator
-  #     - service_discovery
-  #     - gateway
-  #   environment:
-  #     POSTGRES_HOST: game_history_database
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
-  #     endpoint_mode: dnsrr
-  #   networks:
-  #     - uno_net
+  game_service:
+    build: ./game_service
+    # image: almightycrickitycrick/game_service
+    ports:
+      - "7070"
+    depends_on:
+      - game_history_database
+      - cluster_initiator
+      - service_discovery
+      - gateway
+    environment:
+      POSTGRES_HOST: game_history_database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    networks:
+      - uno_net
 
   etl_overseer:
     build: ./etl_overseer
@@ -88,7 +88,7 @@ services:
       - "8080"
     depends_on:
       - ranking_service_database
-      # - ranking_service
+      - ranking_service
       - uno_warehouse_database
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -153,59 +153,59 @@ services:
     networks:
       - uno_net
 
-  # redis_cache_node_1:
-  #   image: redis:7-alpine
-  #   restart: always
-  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
-  #   ports:
-  #     - '6379'
-  #   volumes: 
-  #     - redis_cache_node1:/data
-  #   networks: 
-  #     redis_cluster_net: 
-  #       ipv4_address: 173.18.0.5
-  #     uno_net:
+  redis_cache_node_1:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
+    ports:
+      - '6379'
+    volumes: 
+      - redis_cache_node1:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.5
+      uno_net:
     
 
-  # redis_cache_node_2:
-  #   image: redis:7-alpine
-  #   restart: always
-  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
-  #   ports:
-  #     - '6379'
-  #   volumes: 
-  #     - redis_cache_node2:/data
-  #   networks: 
-  #     redis_cluster_net: 
-  #       ipv4_address: 173.18.0.6
-  #     uno_net:
+  redis_cache_node_2:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no
+    ports:
+      - '6379'
+    volumes: 
+      - redis_cache_node2:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.6
+      uno_net:
   
-  # redis_cache_node_3:
-  #   image: redis:7-alpine
-  #   restart: always
-  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no 
-  #   ports:
-  #     - '6379'
-  #   volumes: 
-  #     - redis_cache_node3:/data
-  #   networks: 
-  #     redis_cluster_net: 
-  #       ipv4_address: 173.18.0.7
-  #     uno_net:
+  redis_cache_node_3:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --appendonly no --cluster-node-timeout 5000 --protected-mode no 
+    ports:
+      - '6379'
+    volumes: 
+      - redis_cache_node3:/data
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.7
+      uno_net:
   
-  # cluster_initiator: 
-  #   image: redis:latest 
-  #   command: redis-cli --cluster create 173.18.0.5:6379 173.18.0.6:6379 173.18.0.7:6379 --cluster-replicas 0 --cluster-yes 
-  #   ports:
-  #     - '3090:3090'
-  #   depends_on: 
-  #     - redis_cache_node_1
-  #     - redis_cache_node_2
-  #     - redis_cache_node_3
+  cluster_initiator: 
+    image: redis:latest 
+    command: redis-cli --cluster create 173.18.0.5:6379 173.18.0.6:6379 173.18.0.7:6379 --cluster-replicas 0 --cluster-yes 
+    ports:
+      - '3090:3090'
+    depends_on: 
+      - redis_cache_node_1
+      - redis_cache_node_2
+      - redis_cache_node_3
 
-  #   networks: 
-  #     redis_cluster_net: 
-  #       ipv4_address: 173.18.0.11 
+    networks: 
+      redis_cluster_net: 
+        ipv4_address: 173.18.0.11 
 
   game_history_database:
     image: postgres:latest
@@ -220,29 +220,29 @@ services:
     networks:
       - uno_net
 
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   command:
-  #     - --storage.tsdb.retention.time=7d
-  #     - --config.file=/etc/prometheus/prometheus.yml
-  #   volumes:
-  #     - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
-  #     - prometheus_data:/prometheus
-  #   networks:
-  #     - uno_net
-  #   ports:
-  #     - 9090:9090
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --storage.tsdb.retention.time=7d
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - prometheus_data:/prometheus
+    networks:
+      - uno_net
+    ports:
+      - 9090:9090
   
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   ports:
-  #     - "3000:3000"
-  #   networks:
-  #     - uno_net
-  #   volumes:
-  #     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-  #     - ./grafana/datasources:/etc/grafana/provisioning/datasources
-  #     - grafana_data:/var/lib/grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - uno_net
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
 
 
 volumes:

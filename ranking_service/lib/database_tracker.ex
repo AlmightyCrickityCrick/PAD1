@@ -15,7 +15,7 @@ defmodule DatabaseTracker do
   end
 
   def handle_call({:replica}, _from, state) do
-    {:reply, Enum.random(Map.get(state, :replicas)), state}
+    {:reply, Enum.at(Map.get(state, :replicas), 0), state}
   end
 
   def handle_cast({:change_repo, new_info}, state) do

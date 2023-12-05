@@ -14,7 +14,9 @@ defmodule RankingStrategy do
   def login(email, password) do
     repo = GenServer.call(DatabaseTracker, {:replica})
     try do
+      IO.puts("Received Repo. Trying to get user")
       user = repo.one!(from u in Schemas.Player, where: u.email == ^email and u.password == ^password)
+      IO.inspect(user)
       addUserToCache(user)
       user
     rescue
@@ -25,12 +27,18 @@ defmodule RankingStrategy do
   end
 
   def addUserToCache(user) do
-    IO.puts("Trying to add to Cache")
-    # result = RedisCache.command!(["SET", user.id, Poison.encode!(user), "EX", 3600], user.id)
-    result = RedisCache.put(user.id, Poison.encode!(user))
-    r = RedisCache.expire(user.id, 3600000)
-    Io.puts("Should have been added to Cache")
-    IO.inspect(result)
+    try do
+      IO.puts("Trying to add to Cache")
+      # result = RedisCache.command!(["SET", user.id, Poison.encode!(user), "EX", 3600], user.id)
+      result = RedisCache.put(user.id, Poison.encode!(user))
+      r = RedisCache.expire(user.id, 3600000)
+      IO.puts("Should have been added to Cache")
+      IO.inspect(result)
+    rescue
+      e ->
+        IO.inspect(e)
+        IO.puts("Redis died again lmao")
+      end
    end
 
   def register(player) do
